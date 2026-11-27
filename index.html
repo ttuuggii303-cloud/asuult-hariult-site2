@@ -302,14 +302,22 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
       <button class="btn btn-sm btn-full" style="margin-bottom:0" onclick="doLogout()">🚪 Гарах</button>
     </div>
 
+    <!-- Shown when teacher is logged in -->
+    <div id="land-teacher-bar" style="display:none;margin-bottom:12px;background:#1a1a40;border:1px solid #6366f1;border-radius:12px;padding:12px 16px">
+      <div style="font-weight:700;margin-bottom:4px" id="land-teacher-name">👩‍🏫 Багш</div>
+      <p class="muted" style="font-size:.8rem;margin-bottom:10px">Багшийн эрхээр зөвхөн уралдаан үүсгэнэ (уралдаанд оролцох боломжгүй)</p>
+      <button class="btn btn-primary btn-full" onclick="goToDash()">📚 Уралдаан үүсгэх</button>
+      <button class="btn btn-sm btn-full" style="margin-bottom:0" onclick="doLogout()">🚪 Гарах</button>
+    </div>
+
     <!-- Shown when no one is logged in -->
     <div id="land-auth-bar">
       <button class="btn btn-primary btn-full btn-lg" onclick="goToAuth('teacher')">👩‍🏫 Багшаар нэвтрэх / бүртгүүлэх</button>
       <button class="btn btn-full btn-lg" style="margin-bottom:10px" onclick="goToAuth('student')">🎓 Сурагчаар нэвтрэх / бүртгүүлэх</button>
     </div>
 
-    <div class="sep"></div>
-    <p class="muted" style="font-size:.85rem">📱 Хүүхдүүд QR код уншиж уралдаанд нэгдэнэ</p>
+    <div class="sep" id="land-qr-sep"></div>
+    <p class="muted" id="land-qr-hint" style="font-size:.85rem">📱 Хүүхдүүд QR код уншиж уралдаанд нэгдэнэ</p>
     <button class="btn btn-sm" style="margin-top:8px" onclick="showView('v-setup')">🔧 Firebase тохиргоо</button>
   </div>
 </div>
@@ -690,6 +698,15 @@ function setupFirebase() {
     if (!cfg.databaseURL) throw new Error('databaseURL байхгүй — Realtime Database идэвхжүүлснийхаа дараа шинэчил');
     localStorage.setItem('fb-cfg', JSON.stringify(cfg));
     initFB(cfg);
+    toast('Firebase холбогдлоо ✅');
+    const sess = currentAccount || getSession();
+    if (sess && sess.role === 'teacher') {
+      currentAccount = sess;
+      loadDashboard();
+      showView('v-dashboard');
+    } else {
+      showView('v-landing');
+    }
   } catch(e) { alert('⚠️ Алдаа: ' + e.message); }
 }
 
@@ -709,6 +726,16 @@ function init() {
 
   if (jid && cfg64) {
     // === STUDENT path via QR ===
+    const sess = getSession();
+    if (sess && sess.role === 'teacher') {
+      currentAccount = sess;
+      alert('Багшийн эрхээр нэвтэрсэн тул уралдаанд оролцох боломжгүй! Зөвхөн уралдаан үүсгэнэ.');
+      const saved = localStorage.getItem('fb-cfg');
+      if (!saved) { showView('v-setup'); return; }
+      try { initFB(JSON.parse(saved)); loadDashboard(); showView('v-dashboard'); }
+      catch(e) { showView('v-setup'); }
+      return;
+    }
     try {
       const cfg = JSON.parse(atob(decodeURIComponent(cfg64)));
       initFB(cfg);
@@ -755,13 +782,19 @@ function showView(id) {
   if (id === 'v-landing') {
     const sess = currentAccount || getSession();
     const isStudent = sess && sess.role === 'student';
+    const isTeacher = sess && sess.role === 'teacher';
     const studentBar = ge('land-student-bar');
+    const teacherBar = ge('land-teacher-bar');
     const authBar    = ge('land-auth-bar');
-    if (studentBar) {
-      studentBar.style.display = isStudent ? '' : 'none';
-      authBar.style.display    = isStudent ? 'none' : '';
-      if (isStudent) ge('land-student-name').textContent = '🎓 ' + sess.name + ' (' + sess.phone + ')';
-    }
+    const qrSep      = ge('land-qr-sep');
+    const qrHint     = ge('land-qr-hint');
+    if (studentBar) studentBar.style.display = isStudent ? '' : 'none';
+    if (teacherBar) teacherBar.style.display = isTeacher ? '' : 'none';
+    if (authBar)    authBar.style.display    = (isStudent || isTeacher) ? 'none' : '';
+    if (qrSep)      qrSep.style.display      = isTeacher ? 'none' : '';
+    if (qrHint)     qrHint.style.display     = isTeacher ? 'none' : '';
+    if (isStudent) ge('land-student-name').textContent = '🎓 ' + sess.name + ' (' + sess.phone + ')';
+    if (isTeacher) ge('land-teacher-name').textContent = '👩‍🏫 ' + sess.name + ' (' + sess.phone + ')';
   }
 }
 function goToAuth(role) {
@@ -1338,6 +1371,10 @@ function renderTResults(s) {
 // STUDENT JOIN
 // ═══════════════════════════════
 function buildJoinView() {
+  const sess = getSession();
+  if (sess && sess.role === 'student' && ge('s-name') && !ge('s-name').value) {
+    ge('s-name').value = sess.name;
+  }
   // Avatars
   ge('av-grid').innerHTML = AVATARS.map((a,i)=>`
     <span class="av-opt ${i===0?'sel':''}" onclick="pickAv(this,'${a}')">${a}</span>
@@ -1372,6 +1409,11 @@ function pickOut(el,o,lbl){ document.querySelectorAll('.out-opt').forEach(e=>e.c
 function pickCol(el,c){ document.querySelectorAll('.col-opt').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); myColor=c; updatePreview(); }
 
 async function studentJoin() {
+  const sess = getSession();
+  if (sess && sess.role === 'teacher') {
+    showErr(ge('sjoin-err'), 'Багшийн эрхээр уралдаанд оролцох боломжгүй! Зөвхөн уралдаан үүсгэнэ.');
+    return;
+  }
   const name = v('s-name');
   const err  = ge('sjoin-err');
   if (!name) { showErr(err,'Нэрээ бичнэ үү'); return; }
