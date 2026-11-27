@@ -670,6 +670,7 @@ const ANS_LBL = ['A','B','C','D'];
 let db = null, auth = null;
 let currentUser  = null;   // Firebase user (teacher sessions)
 let currentAccount = null; // phone-based local account {phone, name, role}
+let pendingJoin  = null;   // { jid, cfg64 } if QR scanned before student login
 let sessionId   = null;
 let studentId   = null;
 let myAvatar    = AVATARS[0];
@@ -729,13 +730,21 @@ function init() {
     const sess = getSession();
     if (sess && sess.role === 'teacher') {
       currentAccount = sess;
-      alert('Багшийн эрхээр нэвтэрсэн тул уралдаанд оролцох боломжгүй! Зөвхөн уралдаан үүсгэнэ.');
+      alert('Багшийн эрхээр нэвтэрсэн тул шалгалт/уралдаанд оролцох боломжгүй! Зөвхөн уралдаан үүсгэнэ.');
       const saved = localStorage.getItem('fb-cfg');
       if (!saved) { showView('v-setup'); return; }
       try { initFB(JSON.parse(saved)); loadDashboard(); showView('v-dashboard'); }
       catch(e) { showView('v-setup'); }
       return;
     }
+    if (!sess) {
+      // Must login/register as Student before joining a race
+      pendingJoin = { jid, cfg64 };
+      goToAuth('student');
+      toast('Уралдаанд оролцохын тулд Сурагчаар нэвтэрнэ үү 🎓', '#6366f1');
+      return;
+    }
+    currentAccount = sess;
     try {
       const cfg = JSON.parse(atob(decodeURIComponent(cfg64)));
       initFB(cfg);
@@ -776,6 +785,13 @@ function init() {
 // VIEW
 // ═══════════════════════════════
 function showView(id) {
+  const sess = currentAccount || getSession();
+  // Strictly block teachers from entering any student quiz/exam views
+  if (sess && sess.role === 'teacher' && ['v-sjoin','v-swait','v-sgame','v-sresults'].includes(id)) {
+    toast('Багшийн эрхээр шалгалт өгөх боломжгүй!', '#ef4444');
+    id = localStorage.getItem('fb-cfg') ? 'v-dashboard' : 'v-setup';
+    if (id === 'v-dashboard') loadDashboard();
+  }
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   // Update landing page based on login state
@@ -928,6 +944,10 @@ function doLogout() {
 
 function onAuthSuccess() {
   if (currentAccount.role === 'teacher') {
+    if (pendingJoin) {
+      pendingJoin = null;
+      toast('Багшийн эрхээр шалгалт өгөх боломжгүй! Багшийн хуудас руу шилжлээ.', '#ef4444');
+    }
     // Teacher needs Firebase for sessions — check setup
     const saved = localStorage.getItem('fb-cfg');
     if (!saved) { showView('v-setup'); return; }
@@ -935,6 +955,19 @@ function onAuthSuccess() {
     catch(e) { showView('v-setup'); return; }
     loadDashboard(); showView('v-dashboard');
   } else {
+    if (pendingJoin) {
+      const pj = pendingJoin;
+      pendingJoin = null;
+      try {
+        const cfg = JSON.parse(atob(decodeURIComponent(pj.cfg64)));
+        initFB(cfg);
+        sessionId = pj.jid;
+        studentId = sessionStorage.getItem('sid') || null;
+        if (studentId) rejoinAsStudent();
+        else { buildJoinView(); showView('v-sjoin'); }
+        return;
+      } catch(e) {}
+    }
     // Student: go straight to achievements dashboard
     loadStudentDashboard();
     showView('v-sdash');
