@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Асуулт Уралдаан</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* ===== VARIABLES ===== */
+:root {
+  --bg: #0f1117;
+  --bg2: #1a1d2e;
+  --surface: #1e2235;
+  --surface2: #252a40;
+  --text: #e8ebf2;
+  --muted: #8892a4;
+  --line: #2e3550;
+  --accent: #6c5ce7;
+  --accent2: #a29bfe;
+  --green: #00b894;
+  --red: #d63031;
+  --yellow: #fdcb6e;
+  --orange: #e17055;
+  --blue: #0984e3;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ===== LAYOUT ===== */
+.page { display: none; min-height: 100vh; }
+.page.active { display: flex; flex-direction: column; }
+.center { align-items: center; justify-content: center; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 80px; width: 100%; }
+.wrap-sm { max-width: 460px; margin: 0 auto; padding: 32px 16px; width: 100%; }
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.card-sm { padding: 16px; }
+
+/* ===== TYPOGRAPHY ===== */
+h1 { font-size: 2rem; font-weight: 800; }
+h2 { font-size: 1.5rem; font-weight: 700; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+.muted { color: var(--muted); font-size: .9rem; }
+.badge {
+  display: inline-block; padding: 2px 10px;
+  border-radius: 20px; font-size: .78rem; font-weight: 600;
+  background: var(--surface2); color: var(--accent2);
+}
+
+/* ===== FORMS ===== */
+input, textarea, select {
+  width: 100%; padding: 11px 14px;
+  background: var(--bg2); color: var(--text);
+  border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+  font: inherit; margin-bottom: 12px; outline: none;
+  transition: border-color .2s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--accent2); }
+textarea { min-height: 72px; resize: vertical; }
+label { display: block; font-size: .88rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; margin-top: 4px; }
+
+/* ===== BUTTONS ===== */
+button {
+  font: inherit; cursor: pointer; padding: 10px 20px;
+  border-radius: var(--radius-sm); border: 1.5px solid var(--line);
+  background: var(--surface2); color: var(--text);
+  font-weight: 600; transition: all .15s;
+}
+button:hover { opacity: .85; transform: translateY(-1px); }
+button:active { transform: none; }
+.btn-primary {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+  padding: 12px 28px; font-size: 1rem;
+}
+.btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+.btn-red { background: var(--red); color: #fff; border-color: var(--red); }
+.btn-yellow { background: var(--yellow); color: #111; border-color: var(--yellow); }
+.btn-blue { background: var(--blue); color: #fff; border-color: var(--blue); }
+.btn-sm { padding: 6px 14px; font-size: .85rem; }
+.btn-lg { padding: 14px 32px; font-size: 1.1rem; border-radius: var(--radius); }
+.btn-full { width: 100%; }
+.btn-ghost { background: transparent; border-color: var(--line); }
+
+/* ===== GRID ===== */
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+.row > * { flex: 1; min-width: 140px; }
+.col-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.col-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+/* ===== NAV ===== */
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; background: var(--surface);
+  border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 100;
+}
+.nav-brand { font-size: 1.2rem; font-weight: 800; color: var(--accent2); display: flex; align-items: center; gap: 8px; }
+.nav-user { display: flex; align-items: center; gap: 10px; font-size: .9rem; }
+
+/* ===== AVATAR SELECTOR ===== */
+.avatar-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.avatar-opt {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; cursor: pointer; border: 3px solid transparent;
+  transition: all .15s; user-select: none;
+}
+.avatar-opt.selected { border-color: var(--accent2); transform: scale(1.12); }
+
+/* ===== GAME LOBBY ===== */
+.qr-box {
+  background: #fff; border-radius: var(--radius);
+  padding: 20px; display: inline-flex;
+  align-items: center; justify-content: center;
+}
+.player-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.player-chip {
+  background: var(--surface2); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: .88rem; font-weight: 600;
+}
+.player-ava { font-size: 1.4rem; }
+.player-count { font-size: 2.5rem; font-weight: 800; color: var(--accent2); }
+
+/* ===== RACE GAME ===== */
+.timer-ring {
+  position: relative; display: inline-flex;
+  align-items: center; justify-content: center;
+}
+.timer-num {
+  font-size: 3rem; font-weight: 900; color: var(--text);
+  position: absolute; text-align: center; line-height: 1;
+}
+.timer-label { font-size: .9rem; color: var(--muted); }
+.question-box {
+  background: var(--surface2); border: 2px solid var(--accent);
+  border-radius: var(--radius); padding: 28px 24px;
+  margin: 20px 0; text-align: center;
+}
+.question-text { font-size: 1.35rem; font-weight: 700; line-height: 1.4; }
+.answer-input-row { display: flex; gap: 10px; }
+.answer-input-row input { flex: 1; margin: 0; }
+.progress-bar {
+  height: 8px; background: var(--surface2); border-radius: 20px;
+  margin: 12px 0; overflow: hidden;
+}
+.progress-fill { height: 100%; border-radius: 20px; background: var(--accent2); transition: width .3s; }
+
+/* ===== LEADERBOARD ===== */
+.rank-table { width: 100%; border-collapse: collapse; }
+.rank-table th, .rank-table td {
+  padding: 12px 14px; text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.rank-table th { color: var(--muted); font-size: .82rem; text-transform: uppercase; letter-spacing: .06em; }
+.rank-num { font-size: 1.3rem; font-weight: 800; }
+.rank-1 { color: #ffd700; }
+.rank-2 { color: #c0c0c0; }
+.rank-3 { color: #cd7f32; }
+.score-pill {
+  display: inline-block; background: var(--accent); color: #fff;
+  border-radius: 20px; padding: 3px 14px; font-weight: 700; font-size: .95rem;
+}
+
+/* ===== FEEDBACK ===== */
+.feedback {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  padding: 12px 24px; border-radius: 10px; font-weight: 700; font-size: 1rem;
+  z-index: 999; opacity: 0; transition: opacity .3s; pointer-events: none;
+}
+.feedback.show { opacity: 1; }
+.feedback.correct { background: var(--green); color: #fff; }
+.feedback.wrong { background: var(--red); color: #fff; }
+
+/* ===== ANSWER RESULT ===== */
+.result-banner {
+  display: none; padding: 18px 24px; border-radius: var(--radius);
+  font-size: 1.3rem; font-weight: 800; text-align: center; margin: 16px 0;
+}
+.result-banner.correct { background: rgba(0,184,148,.18); border: 2px solid var(--green); color: var(--green); }
+.result-banner.wrong { background: rgba(214,48,49,.15); border: 2px solid var(--red); color: var(--red); }
+.result-banner.show { display: block; }
+
+/* ===== TABS ===== */
+.tabs { display: flex; gap: 4px; background: var(--surface2); border-radius: 10px; padding: 4px; margin-bottom: 20px; }
+.tab { flex: 1; text-align: center; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: 600; border: none; background: transparent; color: var(--muted); }
+.tab.active { background: var(--accent); color: #fff; }
+
+/* ===== QUESTION EDITOR ===== */
+.q-editor { background: var(--surface2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 10px; position: relative; }
+.q-num { position: absolute; top: 12px; right: 14px; color: var(--muted); font-size: .8rem; }
+
+/* ===== STATUS ===== */
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot-green { background: var(--green); }
+.dot-yellow { background: var(--yellow); }
+.dot-red { background: var(--red); }
+
+/* ===== WAITING ===== */
+.waiting-anim {
+  display: flex; gap: 6px; justify-content: center; margin: 20px 0;
+}
+.waiting-anim span {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--accent2);
+  animation: bounce .8s infinite;
+}
+.waiting-anim span:nth-child(2) { animation-delay: .15s; }
+.waiting-anim span:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 0%,80%,100% { transform: scale(.8); opacity:.5; } 40% { transform: scale(1.2); opacity:1; } }
+
+/* ===== SVG TIMER ===== */
+svg.ring { transform: rotate(-90deg); }
+circle.track { fill: none; stroke: var(--surface2); stroke-width: 10; }
+circle.fill  { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset .9s linear, stroke .5s; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 520px) {
+  h1 { font-size: 1.5rem; }
+  .col-2, .col-3 { grid-template-columns: 1fr; }
+  .question-text { font-size: 1.1rem; }
+  .timer-num { font-size: 2.2rem; }
+}
+
+/* ===== DIVIDER ===== */
+.divider { border: none; border-top: 1px solid var(--line); margin: 20px 0; }
+.section-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 10px; }
+.empty-msg { text-align: center; color: var(--muted); padding: 40px 0; font-size: 1rem; }
+
+/* ===== TRANSITIONS ===== */
+.slide-in { animation: slideIn .3s ease; }
+@keyframes slideIn { from { transform: translateY(16px); opacity:0; } to { transform: none; opacity:1; } }
+
+/* ===== SPECIAL BADGE ===== */
+.crown { font-size: 1.5rem; }
+.medal { display: inline-block; width: 32px; height: 32px; border-radius: 50%; line-height: 32px; text-align: center; font-weight: 800; font-size: .9rem; }
+.medal-1 { background: #ffd700; color: #111; }
+.medal-2 { background: #c0c0c0; color: #111; }
+.medal-3 { background: #cd7f32; color: #fff; }
+.medal-n { background: var(--surface2); color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- PAGE: AUTH                                                   -->
+<!-- ============================================================ -->
+<div class="page active center" id="page-auth">
+  <div class="wrap-sm slide-in">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:3rem;margin-bottom:8px;">🎯</div>
+      <h1>Асуулт Уралдаан</h1>
+      <p class="muted" style="margin-top:6px;">Багш асуулт тавьж, сурагчид уралдана!</p>
+    </div>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('login')">Нэвтрэх</button>
+        <button class="tab" onclick="switchTab('register')">Бүртгүүлэх</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="tab-login">
+        <label>Нэвтрэх нэр</label>
+        <input id="l-user" placeholder="Нэвтрэх нэр">
+        <label>Нууц үг</label>
+        <input id="l-pass" type="password" placeholder="Нууц үг" onkeydown="if(event.key==='Enter')doLogin()">
+        <div id="l-err" style="color:var(--red);font-size:.87rem;margin-bottom:8px;display:none;"></div>
+        <button class="btn-primary btn-full" onclick="doLogin()">Нэвтрэх →</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="tab-register" style="display:none;">
+        <label>Бүртгэлийн дүр</label>
+        <div class="col-2" style="margin-bottom:12px;">
+          <label style="cursor:pointer;">
+            <input type="radio" name="role" value="teacher" checked style="width:auto;margin:0 6px 0 0;">
+            👨‍🏫 Багш
+          </label>
+          <label style="cursor:pointer;">
+            <input type="radio" name="role" value="student" style="width:auto;margin:0 6px 0 0;">
+            🧑‍🎓 Сурагч
+          </label>
+        </div>
+        <label>Нэвтрэх нэр</label>
+        <input id="r-user" placeholder="Нэвтрэх нэр">
+        <label>Нийтэд харагдах нэр</label>
+        <input id="r-display" placeholder="Таны нэр">
+        <label>Нууц үг</label>
+        <input id="r-pass" type="password" placeholder="Нууц үг" onkeydown="if(event.key==='Enter')doRegister()">
+        <div id="r-err" style="color:var(--red);font-size:.87rem;margin-bottom:8px;display:none;"></div>
+        <button class="btn-primary btn-full" onclick="doRegister()">Бүртгүүлэх →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE: TEACHER DASHBOARD                                      -->
+<!-- ============================================================ -->
+<div class="page" id="page-teacher">
+  <div class="nav">
+    <div class="nav-brand">🎯 Уралдаан</div>
+    <div class="nav-user">
+      <span class="badge">👨‍🏫 Багш</span>
+      <span id="t-name-nav"></span>
+      <button class="btn-sm btn-ghost" onclick="logout()">Гарах</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div style="margin-bottom:24px;">
+      <h2>Асуулт удирдах</h2>
+      <p class="muted">Асуулт нэмж, тоглоом эхлүүл.</p>
+    </div>
+
+    <!-- Add Question -->
+    <div class="card" id="q-add-card">
+      <h3 style="margin-bottom:16px;">➕ Асуулт нэмэх</h3>
+      <label>Асуулт</label>
+      <input id="t-q-title" placeholder="Асуултын текст" maxlength="200">
+      <label>Зөв хариулт</label>
+      <input id="t-q-answer" placeholder="Зөв хариулт" maxlength="200">
+      <label>Буруу сонголтууд (нэмэлт — таслалаар тусгаарла)</label>
+      <input id="t-q-wrong" placeholder="Жишээ: Уулын орой, Гол, Нуур" maxlength="300">
+      <button class="btn-primary" onclick="addTeacherQuestion()">Нэмэх</button>
+    </div>
+
+    <!-- Question list -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <h3>Асуултуудын жагсаалт <span class="badge" id="q-count-badge">0</span></h3>
+      <button class="btn-sm btn-ghost" onclick="clearAllQ()">Бүгдийг арилгах</button>
+    </div>
+    <div id="t-q-list"><div class="empty-msg">Асуулт алга байна. Дээрээс нэм!</div></div>
+
+    <!-- Start Game -->
+    <div class="card" style="margin-top:24px;">
+      <h3 style="margin-bottom:14px;">🚀 Тоглоом эхлүүлэх</h3>
+      <div class="col-2">
+        <div>
+          <label>Асуултын тоо</label>
+          <select id="t-q-count">
+            <option value="10">10 асуулт</option>
+            <option value="15">15 асуулт</option>
+            <option value="20">20 асуулт</option>
+            <option value="25">25 асуулт</option>
+          </select>
+        </div>
+        <div>
+          <label>Нэг асуулт (секунд)</label>
+          <select id="t-time-limit">
+            <option value="60">60 секунд</option>
+            <option value="45">45 секунд</option>
+            <option value="30">30 секунд</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary btn-lg btn-full" onclick="startGameSession()">QR үүсгэж тоглоом нээх ▶</button>
+    </div>
+
+    <!-- Past games -->
+    <div style="margin-top:24px;">
+      <h3 style="margin-bottom:10px;">📋 Өнгөрсөн тоглоомууд</h3>
+      <div id="past-games"><div class="muted" style="padding:12px 0;">Тоглоом байхгүй байна.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE: GAME LOBBY (Teacher view)                              -->
+<!-- ============================================================ -->
+<div class="page" id="page-lobby">
+  <div class="nav">
+    <div class="nav-brand">🎯 Уралдаан</div>
+    <div class="nav-user">
+      <span class="badge">👨‍🏫 Лобби</span>
+      <button class="btn-sm btn-ghost" onclick="closeLobby()">Хаах</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="col-2" style="align-items:start;">
+      <div>
+        <h2>Тоглоомын лобби</h2>
+        <p class="muted" style="margin-bottom:16px;">Сурагчид QR кодоор орж ирэх болно.</p>
+        <div class="card card-sm">
+          <div class="section-title">Тоглоомын код</div>
+          <div style="font-size:2rem;font-weight:900;letter-spacing:.12em;color:var(--accent2);" id="lobby-code"></div>
+        </div>
+        <div class="card card-sm" style="margin-top:0;">
+          <div class="section-title">Тохиргоо</div>
+          <div class="muted" style="font-size:.88rem;" id="lobby-config"></div>
+        </div>
+        <div class="card card-sm" style="margin-top:0;">
+          <div class="section-title">Оролцогчид</div>
+          <span class="player-count" id="lobby-count">0</span>
+          <span class="muted"> / 40 хүн</span>
+        </div>
+        <button class="btn-green btn-lg btn-full" id="btn-begin" onclick="beginGame()" style="margin-top:12px;" disabled>
+          ▶ Тоглоом эхлүүлэх
+        </button>
+        <div class="muted" style="font-size:.82rem;margin-top:6px;text-align:center;" id="lobby-hint">Дор хаяж 1 сурагч нэгдсэний дараа эхлүүлнэ</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="section-title">QR КОД</div>
+        <div class="qr-box" style="margin:0 auto 12px;">
+          <div id="qr-canvas"></div>
+        </div>
+        <div class="muted" style="font-size:.82rem;" id="lobby-url-hint">Хуудсыг нэрлэн хадгалаад сурагчдад QR уншуул</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-title">Нэгдсэн сурагчид</div>
+    <div class="player-list" id="lobby-players"><div class="muted">Хүлээж байна...</div></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE: STUDENT JOIN (via QR)                                  -->
+<!-- ============================================================ -->
+<div class="page center" id="page-join">
+  <div class="wrap-sm slide-in">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:2.5rem;">🧑‍🎓</div>
+      <h2 style="margin-top:8px;">Тоглоомд нэгдэх</h2>
+      <p class="muted">Нэрээ болон дүрслэлээ сонгоод нэгд!</p>
+    </div>
+    <div class="card">
+      <label>Таны нэр</label>
+      <input id="j-name" placeholder="Нэрээ бич" maxlength="30">
+      <label>Өнгө (хувцас)</label>
+      <div class="avatar-grid" id="color-grid"></div>
+      <label>Дүрслэл (emoji)</label>
+      <div class="avatar-grid" id="emoji-grid"></div>
+      <div id="j-err" style="color:var(--red);font-size:.87rem;margin-bottom:8px;display:none;"></div>
+      <button class="btn-primary btn-full btn-lg" onclick="joinGame()">Нэгдэх 🎮</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE: STUDENT WAITING ROOM                                   -->
+<!-- ============================================================ -->
+<div class="page center" id="page-waiting">
+  <div class="wrap-sm" style="text-align:center;">
+    <div style="font-size:3rem;margin-bottom:12px;" id="wait-emoji">🎮</div>
+    <h2 id="wait-name">Тоглоом эхлэхийг хүлээж байна...</h2>
+    <p class="muted" id="wait-msg">Багш тоглоомыг эхлүүлэхийг хүлээж байна.</p>
+    <div class="waiting-anim"><span></span><span></span><span></span></div>
+    <div class="card" style="margin-top:20px;text-align:left;">
+      <div class="section-title">Оролцогчид</div>
+      <div class="player-list" id="wait-players"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE: RACE GAME                                              -->
+<!-- ============================================================ -->
+<div class="page" id="page-game">
+  <div class="nav">
+    <div class="nav-brand">🏁 Уралдаан</div>
+    <div class="nav-user" id="game-user-info"></div>
+  </div>
+  <div class="wrap" style="max-width:640px;">
+    <!-- Progress -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span class="muted" id="q-progress-txt"></span>
+      <span style="font-weight:700;color:var(--accent2);" id="game-score-top">0 оноо</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="q-progress-bar" style="width:0%"></div></div>
+
+    <!-- Timer + Question -->
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:16px 0;">
+      <div class="timer-ring">
+        <svg class="ring" width="110" height="110" viewBox="0 0 110 110">
+          <circle class="track" cx="55" cy="55" r="47"/>
+          <circle class="fill" id="timer-fill" cx="55" cy="55" r="47"
+            stroke-dasharray="295.3" stroke-dashoffset="0" stroke="var(--green)"/>
+        </svg>
+        <div style="position:absolute;text-align:center;">
+          <div class="timer-num" id="timer-num">60</div>
+          <div class="timer-label">сек</div>
+        </div>
+      </div>
+      <div class="question-box" style="flex:1;">
+        <div class="muted" style="font-size:.8rem;margin-bottom:6px;" id="q-category"></div>
+        <div class="question-text" id="q-text">Асуулт...</div>
+      </div>
+    </div>
+
+    <!-- Answer result banner -->
+    <div class="result-banner" id="result-banner"></div>
+
+    <!-- MC Options or text input -->
+    <div id="answer-area"></div>
+
+    <!-- Waiting for next -->
+    <div id="next-hint" style="text-align:center;color:var(--muted);font-size:.9rem;margin-top:16px;display:none;">
+      Дараагийн асуулт ачаалж байна...
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE: LEADERBOARD                                            -->
+<!-- ============================================================ -->
+<div class="page" id="page-leaderboard">
+  <div class="nav">
+    <div class="nav-brand">🏆 Дүн</div>
+    <div class="nav-user">
+      <button class="btn-sm btn-ghost" onclick="backToHome()">← Нүүр</button>
+    </div>
+  </div>
+  <div class="wrap" style="max-width:640px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:3rem;">🏆</div>
+      <h2 style="margin-top:6px;">Тоглоом дууслаа!</h2>
+      <p class="muted" id="lb-subtitle">Нийт оноогоор эрэмбэлэв.</p>
+    </div>
+
+    <!-- Top 3 podium -->
+    <div id="lb-podium" style="display:flex;justify-content:center;gap:16px;margin-bottom:28px;align-items:flex-end;flex-wrap:wrap;"></div>
+
+    <!-- Full ranking table -->
+    <div class="card" style="overflow:auto;">
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th>Байр</th>
+            <th>Оролцогч</th>
+            <th>Оноо</th>
+            <th>Зөв</th>
+          </tr>
+        </thead>
+        <tbody id="lb-table"></tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
+      <button class="btn-primary btn-lg" onclick="backToHome()">🏠 Нүүр хуудас</button>
+      <button class="btn-blue btn-lg" id="btn-play-again" onclick="playAgain()" style="display:none;">▶ Дахин тоглох</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE: STUDENT DASHBOARD                                      -->
+<!-- ============================================================ -->
+<div class="page" id="page-student">
+  <div class="nav">
+    <div class="nav-brand">🎯 Уралдаан</div>
+    <div class="nav-user">
+      <span class="badge">🧑‍🎓 Сурагч</span>
+      <span id="s-name-nav"></span>
+      <button class="btn-sm btn-ghost" onclick="logout()">Гарах</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div style="margin-bottom:24px;">
+      <h2>Тоглоомд нэгдэх</h2>
+      <p class="muted">Багшийн QR кодыг уншуулж тоглоомд нэгд.</p>
+    </div>
+    <div class="card" style="text-align:center;padding:40px 24px;">
+      <div style="font-size:4rem;margin-bottom:16px;">📱</div>
+      <h3>Тоглоомын код оруулах</h3>
+      <p class="muted" style="margin-bottom:16px;">Багшийн дэлгэцнээс QR кодыг уншуулах эсвэл кодыг оруулна уу.</p>
+      <div style="display:flex;gap:10px;max-width:300px;margin:0 auto;">
+        <input id="s-game-code" placeholder="XXXXXX код" maxlength="8" style="letter-spacing:.1em;font-size:1.1rem;font-weight:700;">
+        <button class="btn-primary" onclick="joinByCode()">Нэгдэх</button>
+      </div>
+    </div>
+    <div style="margin-top:24px;">
+      <h3 style="margin-bottom:10px;">📋 Өнгөрсөн тоглоомын дүн</h3>
+      <div id="s-past-results"><div class="muted" style="padding:12px 0;">Дүн байхгүй байна.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- FEEDBACK TOAST                                               -->
+<!-- ============================================================ -->
+<div class="feedback" id="feedback-toast"></div>
+
+<script>
+// =====================================================================
+// CONSTANTS & STATE
+// =====================================================================
+const AVATARS = ['🦊','🐺','🐻','🦁','🐯','🦝','🐸','🐧','🦄','🐉','🦅','🦋','🐬','🦈','🐙','🦑','🤖','👽','🧙','🧜','🧚','🧛','⚡','🔥'];
+const COLORS  = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#ff5722','#607d8b','#795548','#009688'];
+const CIRCUMFERENCE = 2 * Math.PI * 47; // ≈ 295.3
+
+let STATE = {
+  user: null,          // { username, displayName, role }
+  gameSession: null,   // current active game session object
+  playerInfo: null,    // { name, color, emoji } when joining
+  currentQ: 0,
+  score: 0,
+  correctCount: 0,
+  timerInterval: null,
+  timeLeft: 60,
+  timeLimit: 60,
+  answered: false,
+  selectedColor: COLORS[2],
+  selectedEmoji: AVATARS[0],
+};
+
+// =====================================================================
+// STORAGE HELPERS
+// =====================================================================
+function dbGet(key, def) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; }
+}
+function dbSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+
+function getUsers()     { return dbGet('aqr-users', {}); }
+function saveUsers(u)   { dbSet('aqr-users', u); }
+function getSessions()  { return dbGet('aqr-sessions', {}); }
+function saveSession(s) { const all = getSessions(); all[s.code] = s; dbSet('aqr-sessions', all); }
+
+// =====================================================================
+// AUTH
+// =====================================================================
+function switchTab(tab) {
+  document.getElementById('tab-login').style.display    = tab === 'login'    ? '' : 'none';
+  document.getElementById('tab-register').style.display = tab === 'register' ? '' : 'none';
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0) === (tab==='login')));
+}
+
+function doLogin() {
+  const user = document.getElementById('l-user').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  const users = getUsers();
+  const err = document.getElementById('l-err');
+  if (!users[user] || users[user].password !== pass) {
+    err.textContent = 'Нэвтрэх нэр эсвэл нууц үг буруу байна.';
+    err.style.display = '';
+    return;
+  }
+  err.style.display = 'none';
+  STATE.user = { username: user, displayName: users[user].displayName, role: users[user].role };
+  dbSet('aqr-session-user', STATE.user);
+  goHome();
+}
+
+function doRegister() {
+  const user    = document.getElementById('r-user').value.trim();
+  const display = document.getElementById('r-display').value.trim();
+  const pass    = document.getElementById('r-pass').value;
+  const role    = document.querySelector('input[name="role"]:checked').value;
+  const err     = document.getElementById('r-err');
+  const users   = getUsers();
+
+  if (!user || !pass || !display) { err.textContent = 'Бүх талбарыг бөглөнө үү.'; err.style.display = ''; return; }
+  if (user.length < 3) { err.textContent = 'Нэвтрэх нэр хамгийн багадаа 3 тэмдэгт байх ёстой.'; err.style.display = ''; return; }
+  if (users[user]) { err.textContent = 'Энэ нэвтрэх нэр аль хэдийн бүртгэлтэй байна.'; err.style.display = ''; return; }
+
+  users[user] = { password: pass, displayName: display, role };
+  saveUsers(users);
+  err.style.display = 'none';
+  toast('Бүртгэл амжилттай! Нэвтэрнэ үү.', 'correct');
+  switchTab('login');
+  document.getElementById('l-user').value = user;
+}
+
+function logout() {
+  dbSet('aqr-session-user', null);
+  STATE.user = null;
+  showPage('page-auth');
+}
+
+// =====================================================================
+// ROUTING
+// =====================================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function goHome() {
+  if (!STATE.user) { showPage('page-auth'); return; }
+  if (STATE.user.role === 'teacher') {
+    document.getElementById('t-name-nav').textContent = STATE.user.displayName;
+    renderTeacherQuestions();
+    renderPastGames();
+    showPage('page-teacher');
+  } else {
+    document.getElementById('s-name-nav').textContent = STATE.user.displayName;
+    renderStudentPastResults();
+    showPage('page-student');
+  }
+}
+
+function backToHome() {
+  if (STATE.timerInterval) { clearInterval(STATE.timerInterval); STATE.timerInterval = null; }
+  goHome();
+}
+
+// =====================================================================
+// TEACHER: QUESTIONS
+// =====================================================================
+function getTeacherQuestions() {
+  if (!STATE.user) return [];
+  return dbGet('aqr-tq-' + STATE.user.username, []);
+}
+function saveTeacherQuestions(qs) {
+  dbSet('aqr-tq-' + STATE.user.username, qs);
+}
+
+function addTeacherQuestion() {
+  const title  = document.getElementById('t-q-title').value.trim();
+  const answer = document.getElementById('t-q-answer').value.trim();
+  const wrong  = document.getElementById('t-q-wrong').value.trim();
+  if (!title || !answer) { toast('Асуулт болон зөв хариултыг бичнэ үү.', 'wrong'); return; }
+  const qs = getTeacherQuestions();
+  qs.push({
+    id: uid(),
+    title,
+    answer,
+    wrongOptions: wrong ? wrong.split(',').map(s => s.trim()).filter(Boolean) : [],
+    time: Date.now()
+  });
+  saveTeacherQuestions(qs);
+  document.getElementById('t-q-title').value  = '';
+  document.getElementById('t-q-answer').value = '';
+  document.getElementById('t-q-wrong').value  = '';
+  renderTeacherQuestions();
+  toast('Асуулт нэмэгдлээ!', 'correct');
+}
+
+function renderTeacherQuestions() {
+  const qs  = getTeacherQuestions();
+  const el  = document.getElementById('t-q-list');
+  const cnt = document.getElementById('q-count-badge');
+  cnt.textContent = qs.length;
+  if (!qs.length) { el.innerHTML = '<div class="empty-msg">Асуулт алга байна. Дээрээс нэм!</div>'; return; }
+  el.innerHTML = qs.map((q, i) => `
+    <div class="q-editor">
+      <span class="q-num">${i+1}/${qs.length}</span>
+      <div style="font-weight:600;margin-bottom:4px;">${esc(q.title)}</div>
+      <div class="muted" style="font-size:.85rem;">✅ ${esc(q.answer)}
+        ${q.wrongOptions.length ? ' &nbsp;|&nbsp; ❌ ' + q.wrongOptions.map(esc).join(', ') : ''}
+      </div>
+      <div style="margin-top:8px;">
+        <button class="btn-sm btn-red" onclick="deleteTeacherQ('${q.id}')">Устгах</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteTeacherQ(id) {
+  let qs = getTeacherQuestions();
+  qs = qs.filter(q => q.id !== id);
+  saveTeacherQuestions(qs);
+  renderTeacherQuestions();
+}
+
+function clearAllQ() {
+  if (!confirm('Бүх асуултыг устгах уу?')) return;
+  saveTeacherQuestions([]);
+  renderTeacherQuestions();
+}
+
+// =====================================================================
+// TEACHER: START GAME SESSION
+// =====================================================================
+function startGameSession() {
+  const qs = getTeacherQuestions();
+  if (!qs.length) { toast('Эхлээд асуулт нэмнэ үү!', 'wrong'); return; }
+  const qCount  = parseInt(document.getElementById('t-q-count').value);
+  const timeLim = parseInt(document.getElementById('t-time-limit').value);
+  if (qs.length < qCount) {
+    toast(`Та ${qCount} асуулт хэрэгтэй ч зөвхөн ${qs.length} байна!`, 'wrong'); return;
+  }
+
+  // Shuffle & slice
+  const shuffled = [...qs].sort(() => Math.random() - .5).slice(0, qCount);
+
+  // Generate unique code
+  const code = genCode();
+  const session = {
+    code,
+    teacher: STATE.user.username,
+    teacherName: STATE.user.displayName,
+    questions: shuffled,
+    timeLimit: timeLim,
+    players: {},      // username/id -> { name, color, emoji, score, correctCount, answers }
+    status: 'waiting',// waiting | active | done
+    currentQ: -1,
+    createdAt: Date.now(),
+    startedAt: null,
+    endedAt: null,
+  };
+  saveSession(session);
+  STATE.gameSession = session;
+
+  openLobby(session);
+}
+
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+// =====================================================================
+// TEACHER: LOBBY
+// =====================================================================
+let lobbyPollInterval = null;
+
+function openLobby(session) {
+  document.getElementById('lobby-code').textContent = session.code;
+  document.getElementById('lobby-config').innerHTML =
+    `${session.questions.length} асуулт &nbsp;·&nbsp; ${session.timeLimit}с/асуулт &nbsp;·&nbsp; Хамгийн ихдээ 40 хүн`;
+
+  // Build join URL using current page URL
+  const baseUrl = window.location.href.split('?')[0];
+  const joinUrl = baseUrl + '?join=' + session.code;
+  document.getElementById('lobby-url-hint').innerHTML = `<a href="${joinUrl}" style="color:var(--accent2)">${joinUrl}</a>`;
+
+  // QR Code
+  document.getElementById('qr-canvas').innerHTML = '';
+  new QRCode(document.getElementById('qr-canvas'), {
+    text: joinUrl,
+    width: 200,
+    height: 200,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  showPage('page-lobby');
+  updateLobbyPlayers(session);
+
+  // Poll for new players
+  if (lobbyPollInterval) clearInterval(lobbyPollInterval);
+  lobbyPollInterval = setInterval(() => {
+    const s = getSessions()[STATE.gameSession.code];
+    if (!s) return;
+    STATE.gameSession = s;
+    updateLobbyPlayers(s);
+    if (s.status === 'active') {
+      clearInterval(lobbyPollInterval);
+      runTeacherGameView(s);
+    }
+  }, 1500);
+}
+
+function updateLobbyPlayers(session) {
+  const players = Object.values(session.players || {});
+  const count   = players.length;
+  document.getElementById('lobby-count').textContent = count;
+  const btn  = document.getElementById('btn-begin');
+  const hint = document.getElementById('lobby-hint');
+  btn.disabled = count === 0;
+  hint.textContent = count === 0
+    ? 'Дор хаяж 1 сурагч нэгдсэний дараа эхлүүлнэ'
+    : count + ' сурагч бэлэн байна. Эхлүүлж болно!';
+
+  document.getElementById('lobby-players').innerHTML = players.length
+    ? players.map(p => `<div class="player-chip"><div class="player-ava">${p.emoji}</div><div>${esc(p.name)}</div></div>`).join('')
+    : '<div class="muted">Хүлээж байна...</div>';
+}
+
+function closeLobby() {
+  if (lobbyPollInterval) clearInterval(lobbyPollInterval);
+  // Mark session cancelled
+  if (STATE.gameSession) {
+    const s = getSessions()[STATE.gameSession.code];
+    if (s) { s.status = 'cancelled'; saveSession(s); }
+  }
+  STATE.gameSession = null;
+  showPage('page-teacher');
+}
+
+function beginGame() {
+  const s = getSessions()[STATE.gameSession.code];
+  if (!s || Object.values(s.players).length === 0) { toast('Хүлээж буй сурагч байхгүй байна!', 'wrong'); return; }
+  s.status = 'active';
+  s.startedAt = Date.now();
+  s.currentQ = 0;
+  saveSession(s);
+  STATE.gameSession = s;
+  if (lobbyPollInterval) clearInterval(lobbyPollInterval);
+  runTeacherGameView(s);
+}
+
+// Teacher watches game progress
+function runTeacherGameView(s) {
+  // Teacher doesn't play — just show leaderboard when done
+  document.getElementById('lobby-hint').textContent = 'Тоглоом явж байна...';
+  document.getElementById('btn-begin').disabled = true;
+  document.getElementById('btn-begin').textContent = '⏳ Тоглоом явж байна';
+
+  if (lobbyPollInterval) clearInterval(lobbyPollInterval);
+  lobbyPollInterval = setInterval(() => {
+    const fresh = getSessions()[STATE.gameSession.code];
+    if (!fresh) return;
+    if (fresh.status === 'done') {
+      clearInterval(lobbyPollInterval);
+      STATE.gameSession = fresh;
+      showLeaderboard(fresh, true);
+    }
+  }, 2000);
+}
+
+function renderPastGames() {
+  const all = getSessions();
+  const mine = Object.values(all).filter(s => s.teacher === STATE.user.username).sort((a,b) => b.createdAt - a.createdAt).slice(0, 10);
+  const el = document.getElementById('past-games');
+  if (!mine.length) { el.innerHTML = '<div class="muted" style="padding:12px 0;">Тоглоом байхгүй байна.</div>'; return; }
+  el.innerHTML = mine.map(s => `
+    <div class="card card-sm" style="margin-bottom:10px;cursor:pointer;" onclick="showLeaderboard(getSessions()['${s.code}'], true)">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span style="font-weight:700;letter-spacing:.06em;color:var(--accent2);">${s.code}</span>
+          <span class="muted" style="margin-left:10px;font-size:.85rem;">${new Date(s.createdAt).toLocaleString('mn-MN')}</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="badge">${s.questions.length} асуулт</span>
+          <span class="badge">${Object.values(s.players||{}).length} хүн</span>
+          <span class="badge" style="background:${s.status==='done'?'rgba(0,184,148,.2)':s.status==='active'?'rgba(109,92,255,.2)':'rgba(142,148,164,.15)'}">
+            ${s.status==='done'?'✅ Дууссан':s.status==='active'?'🏃 Явагдаж байна':s.status==='waiting'?'⏳ Хүлээж байна':'❌ Цуцлагдсан'}
+          </span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// =====================================================================
+// STUDENT: JOIN VIA QR / CODE
+// =====================================================================
+
+// Build avatar selectors
+function buildJoinUI() {
+  const cg = document.getElementById('color-grid');
+  const eg = document.getElementById('emoji-grid');
+  cg.innerHTML = COLORS.map((c, i) => `
+    <div class="avatar-opt ${i===2?'selected':''}" data-color="${c}"
+      style="background:${c};" onclick="selectColor(this,'${c}')">
+    </div>`).join('');
+  eg.innerHTML = AVATARS.map((a, i) => `
+    <div class="avatar-opt ${i===0?'selected':''}" data-emoji="${a}"
+      style="background:var(--surface2);" onclick="selectEmoji(this,'${a}')">
+      ${a}
+    </div>`).join('');
+  STATE.selectedColor = COLORS[2];
+  STATE.selectedEmoji = AVATARS[0];
+}
+
+function selectColor(el, c) {
+  document.querySelectorAll('#color-grid .avatar-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  STATE.selectedColor = c;
+}
+function selectEmoji(el, e) {
+  document.querySelectorAll('#emoji-grid .avatar-opt').forEach(x => x.classList.remove('selected'));
+  el.classList.add('selected');
+  STATE.selectedEmoji = e;
+}
+
+function joinByCode() {
+  const code = document.getElementById('s-game-code').value.trim().toUpperCase();
+  if (!code) { toast('Код оруулна уу!', 'wrong'); return; }
+  const s = getSessions()[code];
+  if (!s) { toast('Тоглоом олдсонгүй!', 'wrong'); return; }
+  if (s.status === 'done' || s.status === 'cancelled') { toast('Тоглоом дууссан байна.', 'wrong'); return; }
+  if (Object.values(s.players).length >= 40) { toast('Тоглоом дүүрсэн байна (40/40)!', 'wrong'); return; }
+  buildJoinUI();
+  STATE.gameSession = s;
+  showPage('page-join');
+}
+
+function joinGame() {
+  const name = document.getElementById('j-name').value.trim();
+  const err  = document.getElementById('j-err');
+  if (!name) { err.textContent = 'Нэрээ бичнэ үү!'; err.style.display = ''; return; }
+  err.style.display = 'none';
+
+  const s = getSessions()[STATE.gameSession.code];
+  if (!s) { toast('Тоглоом олдсонгүй!', 'wrong'); backToHome(); return; }
+  if (s.status === 'done' || s.status === 'cancelled') { toast('Тоглоом дууссан байна.', 'wrong'); backToHome(); return; }
+  if (Object.values(s.players).length >= 40) { toast('Тоглоом дүүрсэн байна!', 'wrong'); return; }
+
+  const pid = uid();
+  STATE.playerInfo = { id: pid, name, color: STATE.selectedColor, emoji: STATE.selectedEmoji };
+  STATE.score = 0;
+  STATE.correctCount = 0;
+  STATE.currentQ = 0;
+
+  s.players[pid] = {
+    id: pid, name, color: STATE.selectedColor, emoji: STATE.selectedEmoji,
+    score: 0, correctCount: 0, answers: [],
+    joinedAt: Date.now()
+  };
+  saveSession(s);
+  STATE.gameSession = s;
+
+  // Show waiting room
+  document.getElementById('wait-emoji').textContent = STATE.selectedEmoji;
+  document.getElementById('wait-name').textContent  = name + ' — бэлэн!';
+  document.getElementById('wait-msg').textContent   = 'Багш тоглоомыг эхлүүлэхийг хүлээж байна...';
+  showPage('page-waiting');
+  updateWaitingPlayers(s);
+
+  startWaitingPoll();
+}
+
+let waitPollInterval = null;
+function startWaitingPoll() {
+  if (waitPollInterval) clearInterval(waitPollInterval);
+  waitPollInterval = setInterval(() => {
+    const s = getSessions()[STATE.gameSession.code];
+    if (!s) { clearInterval(waitPollInterval); toast('Тоглоом олдсонгүй.', 'wrong'); backToHome(); return; }
+    updateWaitingPlayers(s);
+    if (s.status === 'active') {
+      clearInterval(waitPollInterval);
+      STATE.gameSession = s;
+      startStudentGame(s);
+    }
+    if (s.status === 'cancelled') {
+      clearInterval(waitPollInterval);
+      toast('Тоглоом цуцлагдлаа.', 'wrong');
+      backToHome();
+    }
+  }, 1500);
+}
+
+function updateWaitingPlayers(s) {
+  const players = Object.values(s.players || {});
+  document.getElementById('wait-players').innerHTML = players.map(p => `
+    <div class="player-chip">
+      <div class="player-ava">${p.emoji}</div>
+      <div>${esc(p.name)}</div>
+    </div>`).join('') || '<div class="muted">...</div>';
+}
+
+// =====================================================================
+// STUDENT: GAME
+// =====================================================================
+function startStudentGame(session) {
+  STATE.score = 0;
+  STATE.correctCount = 0;
+  STATE.currentQ = 0;
+  STATE.timeLimit = session.timeLimit;
+  showPage('page-game');
+  document.getElementById('game-user-info').innerHTML = `
+    <span style="font-size:1.3rem;">${STATE.playerInfo.emoji}</span>
+    <span style="font-weight:700;">${esc(STATE.playerInfo.name)}</span>
+  `;
+  updateScoreDisplay();
+  loadQuestion(session, 0);
+}
+
+function loadQuestion(session, idx) {
+  const qs = session.questions;
+  if (idx >= qs.length) { endStudentGame(session); return; }
+
+  const q = qs[idx];
+  STATE.answered = false;
+  STATE.currentQ = idx;
+
+  // Progress
+  const pct = (idx / qs.length) * 100;
+  document.getElementById('q-progress-bar').style.width = pct + '%';
+  document.getElementById('q-progress-txt').textContent = `${idx+1} / ${qs.length}`;
+  document.getElementById('q-text').textContent = q.title;
+  document.getElementById('q-category').textContent = '';
+
+  // Result banner
+  const rb = document.getElementById('result-banner');
+  rb.className = 'result-banner';
+
+  document.getElementById('next-hint').style.display = 'none';
+
+  // Build answer area
+  buildAnswerArea(q);
+
+  // Start timer
+  startTimer(session, idx);
+}
+
+function buildAnswerArea(q) {
+  const area = document.getElementById('answer-area');
+
+  // If question has wrong options => multiple choice
+  if (q.wrongOptions && q.wrongOptions.length > 0) {
+    const options = shuffleArray([q.answer, ...q.wrongOptions]);
+    area.innerHTML = `<div class="col-2" id="mc-options">` +
+      options.map((opt, i) => `
+        <button class="mc-btn" data-opt="${esc(opt)}"
+          style="padding:16px;font-size:1rem;font-weight:600;text-align:center;border-radius:var(--radius);"
+          onclick="submitMCAnswer('${esc(opt)}', '${esc(q.answer)}')">
+          ${esc(opt)}
+        </button>`).join('') + `</div>`;
+  } else {
+    // Text input
+    area.innerHTML = `
+      <div class="answer-input-row">
+        <input id="a-input" placeholder="Хариултаа бич..." autocomplete="off" onkeydown="if(event.key==='Enter')submitTextAnswer('${esc(q.answer)}')">
+        <button class="btn-primary" onclick="submitTextAnswer('${esc(q.answer)}')">✓</button>
+      </div>`;
+    setTimeout(() => { const inp = document.getElementById('a-input'); if (inp) inp.focus(); }, 100);
+  }
+}
+
+function startTimer(session, idx) {
+  if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+  STATE.timeLeft = STATE.timeLimit;
+  updateTimerDisplay(STATE.timeLeft, STATE.timeLimit);
+
+  STATE.timerInterval = setInterval(() => {
+    STATE.timeLeft--;
+    updateTimerDisplay(STATE.timeLeft, STATE.timeLimit);
+    if (STATE.timeLeft <= 0) {
+      clearInterval(STATE.timerInterval);
+      if (!STATE.answered) {
+        onWrongAnswer(session, idx, 'timeout');
+      }
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay(t, max) {
+  document.getElementById('timer-num').textContent = t;
+  const pct    = t / max;
+  const offset = CIRCUMFERENCE * (1 - pct);
+  const fill   = document.getElementById('timer-fill');
+  fill.style.strokeDashoffset = offset;
+  fill.style.stroke = t > max * .5 ? 'var(--green)' : t > max * .25 ? 'var(--yellow)' : 'var(--red)';
+}
+
+function submitMCAnswer(selected, correct) {
+  if (STATE.answered) return;
+  STATE.answered = true;
+  if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+
+  // Highlight buttons
+  document.querySelectorAll('.mc-btn').forEach(btn => {
+    btn.disabled = true;
+    if (btn.dataset.opt === correct) btn.style.background = 'var(--green)';
+    else if (btn.dataset.opt === selected && selected !== correct) btn.style.background = 'var(--red)';
+  });
+
+  if (selected === correct) {
+    onCorrectAnswer();
+  } else {
+    onWrongAnswer(getSessions()[STATE.gameSession.code], STATE.currentQ, 'wrong');
+  }
+}
+
+function submitTextAnswer(correct) {
+  if (STATE.answered) return;
+  const inp = document.getElementById('a-input');
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) return;
+  STATE.answered = true;
+  if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+
+  const isCorrect = val.toLowerCase() === correct.toLowerCase();
+  inp.disabled = true;
+  inp.style.borderColor = isCorrect ? 'var(--green)' : 'var(--red)';
+
+  if (isCorrect) {
+    onCorrectAnswer();
+  } else {
+    onWrongAnswer(getSessions()[STATE.gameSession.code], STATE.currentQ, 'wrong');
+  }
+}
+
+function onCorrectAnswer() {
+  const pts = STATE.timeLeft; // seconds remaining = points
+  STATE.score += pts;
+  STATE.correctCount++;
+
+  updateScoreDisplay();
+  showResult(true, `+${pts} оноо! (${STATE.timeLeft}с)`);
+
+  // Save to session
+  const s = getSessions()[STATE.gameSession.code];
+  if (s && STATE.playerInfo && s.players[STATE.playerInfo.id]) {
+    s.players[STATE.playerInfo.id].score = STATE.score;
+    s.players[STATE.playerInfo.id].correctCount = STATE.correctCount;
+    s.players[STATE.playerInfo.id].answers.push({ q: STATE.currentQ, correct: true, time: STATE.timeLeft });
+    saveSession(s);
+    STATE.gameSession = s;
+  }
+
+  setTimeout(() => nextQuestion(), 2200);
+}
+
+function onWrongAnswer(session, idx, reason) {
+  showResult(false, reason === 'timeout' ? '⏰ Хугацаа дууслаа!' : '❌ Буруу хариулт!');
+
+  const s = getSessions()[STATE.gameSession ? STATE.gameSession.code : ''];
+  if (s && STATE.playerInfo && s.players[STATE.playerInfo.id]) {
+    s.players[STATE.playerInfo.id].answers.push({ q: idx, correct: false, time: 0 });
+    saveSession(s);
+    STATE.gameSession = s;
+  }
+
+  setTimeout(() => nextQuestion(), 2200);
+}
+
+function showResult(correct, msg) {
+  const rb = document.getElementById('result-banner');
+  rb.className = 'result-banner show ' + (correct ? 'correct' : 'wrong');
+  rb.textContent = correct ? '✅ ' + msg : '❌ ' + msg;
+}
+
+function nextQuestion() {
+  document.getElementById('next-hint').style.display = 'block';
+  const session = getSessions()[STATE.gameSession.code];
+  if (!session) return;
+  loadQuestion(session, STATE.currentQ + 1);
+}
+
+function updateScoreDisplay() {
+  document.getElementById('game-score-top').textContent = STATE.score + ' оноо';
+}
+
+function endStudentGame(session) {
+  if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+
+  // Mark player done in session
+  const s = getSessions()[session.code];
+  if (s && STATE.playerInfo && s.players[STATE.playerInfo.id]) {
+    s.players[STATE.playerInfo.id].done = true;
+    s.players[STATE.playerInfo.id].finishedAt = Date.now();
+    // Check if all done
+    const allDone = Object.values(s.players).every(p => p.done);
+    if (allDone) { s.status = 'done'; s.endedAt = Date.now(); }
+    saveSession(s);
+    STATE.gameSession = s;
+  }
+
+  // Save to student history
+  if (STATE.user) {
+    const hist = dbGet('aqr-hist-' + STATE.user.username, []);
+    hist.unshift({
+      code: session.code,
+      date: Date.now(),
+      score: STATE.score,
+      correctCount: STATE.correctCount,
+      totalQ: session.questions.length
+    });
+    dbSet('aqr-hist-' + STATE.user.username, hist.slice(0, 20));
+  }
+
+  showLeaderboard(getSessions()[session.code] || STATE.gameSession, false);
+}
+
+// =====================================================================
+// LEADERBOARD
+// =====================================================================
+function showLeaderboard(session, isTeacher) {
+  if (!session) { toast('Дүн олдсонгүй.', 'wrong'); return; }
+
+  const players = Object.values(session.players || {}).sort((a,b) => b.score - a.score);
+  document.getElementById('lb-subtitle').textContent =
+    `Нийт ${players.length} оролцогч · ${session.questions.length} асуулт · ${new Date(session.createdAt).toLocaleString('mn-MN')}`;
+
+  // Podium
+  const podiumEl = document.getElementById('lb-podium');
+  const top3 = players.slice(0, 3);
+  const podiumOrder = top3.length === 1 ? [top3[0]] :
+                      top3.length === 2 ? [top3[0], top3[1]] :
+                      [top3[1], top3[0], top3[2]]; // 2nd, 1st, 3rd
+  const podiumHeights = top3.length === 1 ? ['120px'] :
+                        top3.length === 2 ? ['100px','80px'] :
+                        ['90px','120px','70px'];
+  podiumEl.innerHTML = podiumOrder.map((p, i) => {
+    const rank   = top3.indexOf(p) + 1;
+    const height = podiumHeights[i];
+    const medals = ['🥇','🥈','🥉'];
+    return `<div style="text-align:center;min-width:100px;">
+      <div style="font-size:2rem;">${p.emoji}</div>
+      <div style="font-weight:700;font-size:.9rem;margin:4px 0;">${esc(p.name)}</div>
+      <div class="score-pill" style="margin-bottom:8px;">${p.score} оноо</div>
+      <div style="background:var(--surface2);border-radius:8px 8px 0 0;height:${height};display:flex;align-items:flex-start;justify-content:center;padding-top:12px;font-size:1.8rem;">${medals[rank-1]||rank}</div>
+    </div>`;
+  }).join('');
+
+  // Table
+  document.getElementById('lb-table').innerHTML = players.map((p, i) => {
+    const rank = i + 1;
+    const medalClass = rank <= 3 ? `medal-${rank}` : 'medal-n';
+    const myRow = STATE.playerInfo && p.id === STATE.playerInfo.id;
+    return `<tr ${myRow ? 'style="background:rgba(109,92,231,.1);"' : ''}>
+      <td><span class="medal ${medalClass}">${rank}</span></td>
+      <td>
+        <span style="font-size:1.3rem;margin-right:8px;">${p.emoji}</span>
+        <span style="font-weight:600;">${esc(p.name)}</span>
+        ${myRow ? ' <span class="badge" style="margin-left:4px;">나</span>' : ''}
+      </td>
+      <td><span class="score-pill">${p.score}</span></td>
+      <td>${p.correctCount||0} / ${(p.answers||[]).length || session.questions.length}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);">Оролцогч байхгүй байна</td></tr>';
+
+  document.getElementById('btn-play-again').style.display = isTeacher ? 'none' : '';
+
+  showPage('page-leaderboard');
+}
+
+function playAgain() {
+  // Go back to student home to rejoin
+  backToHome();
+}
+
+function renderStudentPastResults() {
+  if (!STATE.user) return;
+  const hist = dbGet('aqr-hist-' + STATE.user.username, []);
+  const el   = document.getElementById('s-past-results');
+  if (!hist.length) { el.innerHTML = '<div class="muted" style="padding:12px 0;">Дүн байхгүй байна.</div>'; return; }
+  el.innerHTML = hist.map(h => `
+    <div class="card card-sm" style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span style="font-weight:700;color:var(--accent2);">${h.code}</span>
+          <span class="muted" style="margin-left:8px;font-size:.85rem;">${new Date(h.date).toLocaleString('mn-MN')}</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <span class="score-pill">${h.score} оноо</span>
+          <span class="badge">${h.correctCount}/${h.totalQ} зөв</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// =====================================================================
+// UTILITIES
+// =====================================================================
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function esc(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function shuffleArray(arr) { return [...arr].sort(() => Math.random() - .5); }
+
+function toast(msg, type) {
+  const el = document.getElementById('feedback-toast');
+  el.textContent = msg;
+  el.className = 'feedback show ' + type;
+  setTimeout(() => { el.classList.remove('show'); }, 2500);
+}
+
+// =====================================================================
+// STARTUP / QR JOIN DETECTION
+// =====================================================================
+function init() {
+  // Check if URL has ?join=CODE
+  const params = new URLSearchParams(window.location.search);
+  const joinCode = params.get('join');
+
+  if (joinCode) {
+    // Try to join via QR
+    const s = getSessions()[joinCode.toUpperCase()];
+    if (s && s.status === 'waiting') {
+      buildJoinUI();
+      STATE.gameSession = s;
+      showPage('page-join');
+      return;
+    } else if (s && s.status === 'active') {
+      toast('Тоглоом эхэлсэн байна, нэгдэж болохгүй.', 'wrong');
+    } else {
+      toast('Тоглоом олдсонгүй эсвэл дууссан байна.', 'wrong');
+    }
+  }
+
+  // Check persisted login
+  const savedUser = dbGet('aqr-session-user', null);
+  if (savedUser) {
+    STATE.user = savedUser;
+    goHome();
+  } else {
+    showPage('page-auth');
+  }
+}
+
+// Make getSessions globally callable from inline onclick
+window.getSessions = getSessions;
+
+init();
+</script>
+</body>
+</html>

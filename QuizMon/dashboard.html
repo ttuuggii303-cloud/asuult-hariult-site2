@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuizMon – Хяналтын самбар</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a href="dashboard.html" class="nav-brand">🏆 QuizMon</a>
+  <div class="nav-actions">
+    <span class="nav-user" id="navUser"></span>
+    <button class="btn btn-ghost sm" id="logoutBtn">Гарах</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1>Миний асуулт</h1>
+      <p class="muted" style="margin-top:4px">Шинэ тоглоом эхлүүлэхийн өмнө асуулт үүсгэнэ үү</p>
+    </div>
+    <a href="editor.html" class="btn btn-primary large">+ Шинэ асуулт үүсгэх</a>
+  </div>
+
+  <div id="quizList" class="quiz-grid">
+    <div class="empty-state">
+      <div class="es-icon">🔄</div>
+      <p>Ачааллаж байна...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script>
+  let currentUser = null;
+
+  auth.onAuthStateChanged(async user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    currentUser = user;
+    const docSnap = await db.collection('users').doc(user.uid).get();
+    if (docSnap.exists) {
+      document.getElementById('navUser').textContent = '👨‍🏫 ' + docSnap.data().displayName;
+    }
+    loadQuizzes();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    auth.signOut().then(() => window.location.href = 'index.html');
+  });
+
+  async function loadQuizzes() {
+    const snap = await db.collection('quizzes')
+      .where('teacherId', '==', currentUser.uid)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    const list = document.getElementById('quizList');
+    if (snap.empty) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="es-icon">📝</div>
+          <h3>Асуулт байхгүй байна</h3>
+          <p class="muted">Дээрх товч дарж эхний асуулт үүсгэнэ үү</p>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = snap.docs.map(d => {
+      const q = d.data();
+      const created = q.createdAt ? q.createdAt.toDate().toLocaleDateString('mn-MN') : '—';
+      return `
+        <div class="quiz-card">
+          <div class="quiz-info">
+            <h3>${esc(q.title)}</h3>
+            <div class="quiz-meta">📋 ${q.questions.length} асуулт &nbsp;·&nbsp; 🗓 ${created}</div>
+          </div>
+          <div class="quiz-actions">
+            <a href="editor.html?id=${d.id}" class="btn btn-ghost sm">✏️ Засах</a>
+            <button class="btn btn-success sm" onclick="startGame('${d.id}', '${esc(q.title)}')">▶ Эхлүүлэх</button>
+            <button class="btn btn-danger sm"  onclick="deleteQuiz('${d.id}')">🗑</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function startGame(quizId, title) {
+    if (!confirm(`"${title}" тоглоомыг эхлүүлэх үү?`)) return;
+
+    // Load quiz questions
+    const quizSnap = await db.collection('quizzes').doc(quizId).get();
+    if (!quizSnap.exists) { alert('Асуулт олдсонгүй.'); return; }
+    const quiz = quizSnap.data();
+
+    // Generate unique 6-char code
+    const code = generateCode();
+
+    // Create game document
+    await db.collection('games').doc(code).set({
+      quizId,
+      teacherId: currentUser.uid,
+      title: quiz.title,
+      status: 'waiting',
+      currentQuestion: -1,
+      questionStartedAt: null,
+      questions: quiz.questions,
+      totalQuestions: quiz.questions.length,
+      playerCount: 0,
+      maxPlayers: 40,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Go to host page
+    window.location.href = 'host.html?code=' + code;
+  }
+
+  async function deleteQuiz(quizId) {
+    if (!confirm('Энэ асуултыг устгах уу?')) return;
+    await db.collection('quizzes').doc(quizId).delete();
+    loadQuizzes();
+  }
+
+  function generateCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+</script>
+</body>
+</html>

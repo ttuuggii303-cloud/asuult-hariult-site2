@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuizMon – Нэгдэх</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- Entry: enter code -->
+<div id="viewEnter" class="join-wrapper">
+  <div class="join-card">
+    <div class="join-logo">🏆 QuizMon</div>
+    <p class="muted" style="text-align:center;margin-bottom:20px">Тоглоомын код оруулна уу</p>
+    <div class="form-group">
+      <input type="text" id="codeInput" placeholder="XXXXXX" maxlength="6"
+             style="text-align:center;font-size:2rem;font-weight:900;letter-spacing:8px;text-transform:uppercase">
+    </div>
+    <button class="btn btn-primary full large" id="findBtn">Олох →</button>
+    <div id="findMsg" class="alert hidden"></div>
+  </div>
+</div>
+
+<!-- Profile: name + avatar -->
+<div id="viewProfile" class="join-wrapper hidden">
+  <div class="join-card">
+    <div class="join-logo">🏆 QuizMon</div>
+    <div class="join-code-display" id="profileCode"></div>
+    <div class="form-group">
+      <label>Таны нэр</label>
+      <input type="text" id="playerName" placeholder="Нэрээ бичнэ үү" maxlength="30">
+    </div>
+    <div class="form-group">
+      <label>Аватар сонгох</label>
+      <div class="avatar-grid" id="avatarGrid"></div>
+    </div>
+    <button class="btn btn-success full large" id="joinBtn" style="margin-top:16px">🎮 Тоглоомд нэгдэх!</button>
+    <div id="joinMsg" class="alert hidden"></div>
+  </div>
+</div>
+
+<!-- Waiting lobby -->
+<div id="viewWaiting" class="hidden" style="text-align:center;padding:64px 24px">
+  <div style="font-size:4rem;animation:float 2s ease-in-out infinite;display:inline-block" id="myAvatar">🎮</div>
+  <h2 style="margin-top:16px" id="waitName">Хүлээж байна...</h2>
+  <p class="muted" style="margin-top:8px">Багш тоглоом эхлүүлэх хүртэл хүлээнэ үү</p>
+  <div style="margin-top:24px">
+    <span class="muted" style="font-size:.88rem">Тоглоомын код: </span>
+    <span style="font-weight:800;font-size:1.1rem;color:var(--accent)" id="waitCode"></span>
+  </div>
+  <div class="player-chips" style="margin-top:20px;justify-content:center" id="waitPlayers"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script>
+  const AVATARS = ['🦁','🐯','🦊','🐺','🐻','🐼','🦅','🦋','🐸','🐬','🦈','🐉','🦄','🐧','🦝','🦔','🐳','🎸'];
+  const params  = new URLSearchParams(location.search);
+  let gameCode  = (params.get('code') || '').toUpperCase();
+  let selectedAvatar = AVATARS[0];
+  let gameUnsub = null;
+
+  // Build avatar grid
+  const grid = document.getElementById('avatarGrid');
+  AVATARS.forEach((av, i) => {
+    const el = document.createElement('div');
+    el.className = 'avatar-opt' + (i===0?' selected':'');
+    el.textContent = av;
+    el.addEventListener('click', () => {
+      grid.querySelectorAll('.avatar-opt').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedAvatar = av;
+    });
+    grid.appendChild(el);
+  });
+
+  // ── If code in URL, skip entry screen ──
+  if (gameCode) {
+    document.getElementById('viewEnter').classList.add('hidden');
+    document.getElementById('profileCode').textContent = gameCode;
+    document.getElementById('viewProfile').classList.remove('hidden');
+  }
+
+  // ── If already joined this session, resume ──
+  const storedPid  = sessionStorage.getItem('qm_playerId');
+  const storedCode = sessionStorage.getItem('qm_gameCode');
+  if (storedPid && storedCode && (!gameCode || storedCode === gameCode)) {
+    gameCode = storedCode;
+    resumeWaiting(storedPid);
+  }
+
+  // ── Find game ──
+  document.getElementById('findBtn').addEventListener('click', async () => {
+    const code = document.getElementById('codeInput').value.trim().toUpperCase();
+    if (!code) { showMsg('findMsg', 'Код оруулна уу.'); return; }
+    setBtn('findBtn', true, '⏳ Хайж байна...');
+    const snap = await db.collection('games').doc(code).get();
+    setBtn('findBtn', false, 'Олох →');
+    if (!snap.exists) { showMsg('findMsg', '❌ Тоглоом олдсонгүй.'); return; }
+    if (snap.data().status === 'ended') { showMsg('findMsg', 'Тоглоом аль хэдийн дууссан байна.'); return; }
+    gameCode = code;
+    document.getElementById('profileCode').textContent = gameCode;
+    showOnly('viewProfile');
+  });
+
+  // ── Join ──
+  document.getElementById('joinBtn').addEventListener('click', async () => {
+    const name = document.getElementById('playerName').value.trim();
+    if (!name) { showMsg('joinMsg', 'Нэрээ бичнэ үү.'); return; }
+    setBtn('joinBtn', true, '⏳ Нэгдэж байна...');
+
+    const gameSnap = await db.collection('games').doc(gameCode).get();
+    if (!gameSnap.exists) { showMsg('joinMsg', 'Тоглоом олдсонгүй.'); setBtn('joinBtn',false,'🎮 Тоглоомд нэгдэх!'); return; }
+    const game = gameSnap.data();
+    if (game.status === 'ended') { showMsg('joinMsg', 'Тоглоом дууссан байна.'); setBtn('joinBtn',false,'🎮 Тоглоомд нэгдэх!'); return; }
+
+    const pSnap = await db.collection('games').doc(gameCode).collection('players').get();
+    if (pSnap.size >= 40) { showMsg('joinMsg', '⚠️ Тоглоом дүүрсэн байна (40/40).'); setBtn('joinBtn',false,'🎮 Тоглоомд нэгдэх!'); return; }
+
+    const pid = 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,6);
+    await db.collection('games').doc(gameCode).collection('players').doc(pid).set({
+      name, avatar: selectedAvatar, totalScore: 0,
+      answers: {}, joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('games').doc(gameCode).update({
+      playerCount: firebase.firestore.FieldValue.increment(1)
+    });
+
+    sessionStorage.setItem('qm_playerId', pid);
+    sessionStorage.setItem('qm_gameCode', gameCode);
+    sessionStorage.setItem('qm_name',     name);
+    sessionStorage.setItem('qm_avatar',   selectedAvatar);
+
+    resumeWaiting(pid);
+  });
+
+  function resumeWaiting(pid) {
+    const name   = sessionStorage.getItem('qm_name')   || '';
+    const avatar = sessionStorage.getItem('qm_avatar') || '🎮';
+    document.getElementById('myAvatar').textContent = avatar;
+    document.getElementById('waitName').textContent  = name + '! Хүлээж байна...';
+    document.getElementById('waitCode').textContent  = gameCode;
+    showOnly('viewWaiting');
+
+    db.collection('games').doc(gameCode).collection('players')
+      .onSnapshot(snap => {
+        document.getElementById('waitPlayers').innerHTML = snap.docs
+          .map(d => `<span class="player-chip">${d.data().avatar||'👤'} ${esc(d.data().name)}</span>`).join('');
+      });
+
+    if (gameUnsub) gameUnsub();
+    gameUnsub = db.collection('games').doc(gameCode).onSnapshot(snap => {
+      if (!snap.exists) return;
+      const s = snap.data().status;
+      if (s === 'question' || s === 'review') {
+        if (gameUnsub) gameUnsub();
+        window.location.href = 'play.html?code=' + gameCode;
+      }
+    });
+  }
+
+  function showOnly(id) {
+    ['viewEnter','viewProfile','viewWaiting'].forEach(v =>
+      document.getElementById(v).classList.toggle('hidden', v !== id));
+  }
+  function showMsg(id, msg, type='error') {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'alert alert-' + type;
+  }
+  function setBtn(id, disabled, label) {
+    const b = document.getElementById(id);
+    b.disabled = disabled; b.textContent = label;
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+</script>
+</body>
+</html>

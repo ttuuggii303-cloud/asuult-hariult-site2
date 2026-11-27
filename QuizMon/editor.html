@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuizMon – Асуулт засах</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a href="dashboard.html" class="nav-brand">🏆 QuizMon</a>
+  <div class="nav-actions">
+    <a href="dashboard.html" class="btn btn-ghost sm">← Буцах</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div style="max-width:720px;margin:0 auto;padding:24px 0 80px">
+
+    <h2 id="pageTitle" style="margin-bottom:20px">Шинэ асуулт үүсгэх</h2>
+
+    <!-- Quiz meta -->
+    <div class="card">
+      <div class="form-group">
+        <label>Асуулт цуглуулгын гарчиг</label>
+        <input type="text" id="quizTitle" placeholder="Жишээ: Математик – 5-р анги" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label>Асуултын тоо</label>
+        <div class="q-count-picker" id="countPicker">
+          <button class="q-count-btn active" data-n="10">10</button>
+          <button class="q-count-btn" data-n="15">15</button>
+          <button class="q-count-btn" data-n="20">20</button>
+          <button class="q-count-btn" data-n="25">25</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dynamic question blocks -->
+    <div id="questionsWrap"></div>
+
+    <div id="editorMsg" class="alert hidden"></div>
+
+    <button class="btn btn-primary full large" id="saveBtn">💾 Хадгалах</button>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script>
+  const OPT_LABELS  = ['A','B','C','D'];
+  const OPT_CLASSES = ['a','b','c','d'];
+  const OPT_ICONS   = ['♦','■','▲','●'];
+
+  let questionCount = 10;
+  let editId = null;
+  let currentUser = null;
+
+  // ── Auth guard ──
+  auth.onAuthStateChanged(async user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    currentUser = user;
+    const params = new URLSearchParams(location.search);
+    editId = params.get('id');
+    if (editId) {
+      document.getElementById('pageTitle').textContent = 'Асуулт засах';
+      await loadExistingQuiz(editId);
+    } else {
+      buildQuestions(10);
+    }
+  });
+
+  // ── Count picker ──
+  document.querySelectorAll('.q-count-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.q-count-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const n = parseInt(btn.dataset.n);
+      buildQuestions(n);
+    });
+  });
+
+  function buildQuestions(n, existing = []) {
+    questionCount = n;
+    const wrap = document.getElementById('questionsWrap');
+    wrap.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const q = existing[i] || { text: '', options: ['','','',''], correctIndex: 0 };
+      wrap.insertAdjacentHTML('beforeend', questionHTML(i, q));
+    }
+    // Attach correct-answer toggles
+    document.querySelectorAll('.correct-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const qIdx = btn.dataset.q;
+        document.querySelectorAll(`.correct-opt[data-q="${qIdx}"]`).forEach(b => b.classList.remove('sel'));
+        btn.classList.add('sel');
+      });
+    });
+  }
+
+  function questionHTML(i, q) {
+    const opts = OPT_LABELS.map((lbl, j) => `
+      <div class="option-row">
+        <span class="opt-label opt-${OPT_CLASSES[j]}">${lbl}</span>
+        <input type="text" class="opt-input" data-q="${i}" data-opt="${j}"
+               placeholder="Хариулт ${lbl}" value="${esc(q.options[j] || '')}" maxlength="120">
+      </div>`).join('');
+
+    const correctBtns = OPT_LABELS.map((lbl, j) => `
+      <button class="correct-opt ${q.correctIndex === j ? 'sel' : ''}" data-q="${i}" data-opt="${j}">${lbl}</button>
+    `).join('');
+
+    return `
+      <div class="question-block" id="qblock-${i}">
+        <header>
+          <h4>Асуулт ${i + 1}</h4>
+        </header>
+        <input type="text" class="q-text-input" data-q="${i}"
+               placeholder="Асуултын текст бичнэ үү..." value="${esc(q.text || '')}" maxlength="250">
+        <div class="options-grid">${opts}</div>
+        <div class="correct-wrap">
+          <label>Зөв хариулт:</label>
+          ${correctBtns}
+        </div>
+      </div>`;
+  }
+
+  // ── Load existing quiz ──
+  async function loadExistingQuiz(id) {
+    const snap = await db.collection('quizzes').doc(id).get();
+    if (!snap.exists) { alert('Асуулт олдсонгүй.'); history.back(); return; }
+    const quiz = snap.data();
+    document.getElementById('quizTitle').value = quiz.title;
+    const n = quiz.questions.length;
+    // Activate count btn
+    document.querySelectorAll('.q-count-btn').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.n) === n);
+    });
+    buildQuestions(n, quiz.questions);
+  }
+
+  // ── Save ──
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const title = document.getElementById('quizTitle').value.trim();
+    if (!title) { showMsg('Гарчиг бичнэ үү.'); return; }
+
+    const questions = [];
+    let valid = true;
+
+    for (let i = 0; i < questionCount; i++) {
+      const text = document.querySelector(`.q-text-input[data-q="${i}"]`).value.trim();
+      if (!text) { showMsg(`Асуулт ${i+1}-н текст хоосон байна.`); valid = false; break; }
+
+      const options = [];
+      for (let j = 0; j < 4; j++) {
+        const val = document.querySelector(`.opt-input[data-q="${i}"][data-opt="${j}"]`).value.trim();
+        if (!val) { showMsg(`Асуулт ${i+1} – ${OPT_LABELS[j]} хариулт хоосон байна.`); valid = false; break; }
+        options.push(val);
+      }
+      if (!valid) break;
+
+      const selBtn = document.querySelector(`.correct-opt.sel[data-q="${i}"]`);
+      const correctIndex = selBtn ? parseInt(selBtn.dataset.opt) : 0;
+      questions.push({ text, options, correctIndex });
+    }
+
+    if (!valid) return;
+
+    document.getElementById('saveBtn').disabled = true;
+    document.getElementById('saveBtn').textContent = '⏳ Хадгалж байна...';
+
+    const data = {
+      title, questions,
+      teacherId: currentUser.uid,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+      if (editId) {
+        await db.collection('quizzes').doc(editId).update(data);
+      } else {
+        data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('quizzes').add(data);
+      }
+      showMsg('Амжилттай хадгаллаа! ✅', 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 1200);
+    } catch(e) {
+      showMsg('Хадгалах алдаа: ' + e.message);
+      document.getElementById('saveBtn').disabled = false;
+      document.getElementById('saveBtn').textContent = '💾 Хадгалах';
+    }
+  });
+
+  function showMsg(msg, type = 'error') {
+    const el = document.getElementById('editorMsg');
+    el.textContent = msg;
+    el.className = 'alert alert-' + type;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuizMon – Тоглоом</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     LOBBY OVERLAY
+══════════════════════════════ -->
+<div id="lobbyOverlay" class="overlay">
+  <div class="overlay-icon" id="lobbyAvatar">🦁</div>
+  <h2 id="lobbyName"></h2>
+  <p class="muted" style="margin-bottom:16px">Тоглоом эхлэхийг хүлээж байна...</p>
+  <p class="muted" style="font-size:.85rem">Тоглоомын код: <strong id="lobbyCode" style="color:var(--accent)"></strong></p>
+  <div class="spinner" style="margin-top:20px;font-size:2rem">⏳</div>
+</div>
+
+<!-- ══════════════════════════════
+     MAIN GAME SCREEN
+══════════════════════════════ -->
+<div id="gameScreen" class="play-page hidden">
+
+  <!-- Top bar -->
+  <div class="play-topbar">
+    <div class="play-name">
+      <span id="topAvatar"></span> <span id="topName"></span>
+    </div>
+    <div style="text-align:right">
+      <div class="play-score-label">ОНОО</div>
+      <div class="play-score-num" id="scoreDisplay">0</div>
+    </div>
+  </div>
+
+  <div class="play-body">
+    <!-- Question box -->
+    <div class="q-box">
+      <div class="q-num-label" id="qNumLabel">Асуулт 1 / 10</div>
+      <div class="q-text" id="qText"></div>
+      <div class="timer-row">
+        <div class="timer-bar-wrap">
+          <div class="timer-bar-fill" id="timerBarFill" style="width:100%"></div>
+        </div>
+        <div class="timer-num-sm" id="timerNum">60</div>
+      </div>
+    </div>
+
+    <!-- Answer buttons -->
+    <div class="answers-grid" id="answersGrid">
+      <button class="ans-btn ans-btn-a" data-idx="0"><span class="ans-icon">♦</span><span class="ans-text" id="opt0"></span></button>
+      <button class="ans-btn ans-btn-b" data-idx="1"><span class="ans-icon">■</span><span class="ans-text" id="opt1"></span></button>
+      <button class="ans-btn ans-btn-c" data-idx="2"><span class="ans-icon">▲</span><span class="ans-text" id="opt2"></span></button>
+      <button class="ans-btn ans-btn-d" data-idx="3"><span class="ans-icon">●</span><span class="ans-text" id="opt3"></span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     ANSWER FEEDBACK OVERLAY
+══════════════════════════════ -->
+<div id="feedbackOverlay" class="overlay hidden">
+  <div class="overlay-icon" id="feedbackIcon"></div>
+  <div class="score-flash" id="feedbackScore"></div>
+  <p class="muted" id="feedbackMsg" style="margin-top:8px"></p>
+  <p class="muted" id="feedbackTotal" style="margin-top:4px;font-size:.85rem"></p>
+</div>
+
+<!-- ══════════════════════════════
+     FINAL LEADERBOARD OVERLAY
+══════════════════════════════ -->
+<div id="lbOverlay" class="overlay hidden">
+  <div style="max-width:500px;width:100%">
+    <div style="font-size:3rem;text-align:center;margin-bottom:16px">🏆</div>
+    <h2 style="text-align:center;margin-bottom:20px">Эцсийн дүн</h2>
+    <div id="lbList"></div>
+    <div style="text-align:center;margin-top:28px">
+      <a href="join.html" class="btn btn-primary large">🔄 Дахин тоглох</a>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script>
+  // ── Session check ──
+  const GAME_CODE = sessionStorage.getItem('qm_code');
+  const PLAYER_ID = sessionStorage.getItem('qm_player');
+  const PLAYER_NAME   = sessionStorage.getItem('qm_name');
+  const PLAYER_AVATAR = sessionStorage.getItem('qm_avatar') || '🦁';
+
+  if (!GAME_CODE || !PLAYER_ID) {
+    window.location.href = 'join.html'; // No session, go back
+  }
+
+  const OPT_LABELS = ['A','B','C','D'];
+  const ANS_CLASSES = ['ans-btn-a','ans-btn-b','ans-btn-c','ans-btn-d'];
+
+  let totalScore    = 0;
+  let answered      = false;
+  let timerInterval = null;
+  let currentQIdx   = -1;
+  let qStartedAt    = null;
+  let gameData      = null;
+
+  // ── Populate UI ──
+  document.getElementById('lobbyAvatar').textContent = PLAYER_AVATAR;
+  document.getElementById('lobbyName').textContent   = PLAYER_NAME;
+  document.getElementById('lobbyCode').textContent   = GAME_CODE;
+  document.getElementById('topAvatar').textContent   = PLAYER_AVATAR;
+  document.getElementById('topName').textContent     = PLAYER_NAME;
+
+  // ── Listen to game state ──
+  db.collection('games').doc(GAME_CODE).onSnapshot(snap => {
+    if (!snap.exists) return;
+    gameData = snap.data();
+
+    if (gameData.status === 'waiting') {
+      showView('lobbyOverlay');
+    } else if (gameData.status === 'question') {
+      onQuestion();
+    } else if (gameData.status === 'review') {
+      onReview();
+    } else if (gameData.status === 'ended') {
+      showLeaderboard();
+    }
+  });
+
+  // ── Listen to player doc for score sync ──
+  db.collection('games').doc(GAME_CODE).collection('players').doc(PLAYER_ID)
+    .onSnapshot(snap => {
+      if (!snap.exists) return;
+      const p = snap.data();
+      totalScore = p.totalScore || 0;
+      document.getElementById('scoreDisplay').textContent = totalScore;
+    });
+
+  // ── New question ──
+  function onQuestion() {
+    const qi = gameData.currentQuestion;
+    if (qi === currentQIdx) return; // already set up
+    currentQIdx = qi;
+    answered    = false;
+
+    const q = gameData.questions[qi];
+    qStartedAt = gameData.questionStartedAt ? gameData.questionStartedAt.toMillis() : Date.now();
+
+    // Fill UI
+    document.getElementById('qNumLabel').textContent = `Асуулт ${qi+1} / ${gameData.totalQuestions}`;
+    document.getElementById('qText').textContent     = q.text;
+    for (let j = 0; j < 4; j++) {
+      document.getElementById('opt' + j).textContent = q.options[j];
+    }
+
+    // Reset buttons
+    document.querySelectorAll('.ans-btn').forEach(b => {
+      b.classList.remove('correct','wrong','selected','disabled');
+      b.style.opacity = '';
+    });
+
+    showView('gameScreen');
+    startTimer();
+  }
+
+  // ── Timer ──
+  function startTimer() {
+    clearInterval(timerInterval);
+    function tick() {
+      const elapsed   = Math.floor((Date.now() - qStartedAt) / 1000);
+      const remaining = Math.max(0, 60 - elapsed);
+      document.getElementById('timerNum').textContent = remaining;
+      document.getElementById('timerBarFill').style.width = (remaining / 60 * 100) + '%';
+      const low = remaining <= 10;
+      document.getElementById('timerNum').classList.toggle('low', low);
+      document.getElementById('timerBarFill').style.background = low ? 'var(--danger)' : 'var(--accent)';
+      if (remaining <= 0) clearInterval(timerInterval);
+    }
+    tick();
+    timerInterval = setInterval(tick, 300);
+  }
+
+  // ── Answer buttons ──
+  document.getElementById('answersGrid').addEventListener('click', e => {
+    const btn = e.target.closest('.ans-btn');
+    if (!btn || answered) return;
+    answered = true;
+    clearInterval(timerInterval);
+
+    const optIdx  = parseInt(btn.dataset.idx);
+    const elapsed = (Date.now() - qStartedAt) / 1000;
+    const remaining = Math.max(0, 60 - Math.floor(elapsed));
+    const q = gameData.questions[currentQIdx];
+    const isCorrect = optIdx === q.correctIndex;
+    const earned  = isCorrect ? remaining : 0;
+
+    // Highlight selected
+    btn.classList.add('selected');
+    document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('disabled'));
+
+    // Show feedback overlay
+    setTimeout(() => {
+      showFeedback(isCorrect, earned, optIdx, q.correctIndex);
+    }, 400);
+
+    // Write to Firestore
+    const update = {};
+    update[`answers.${currentQIdx}`] = { optionIndex: optIdx, score: earned, correct: isCorrect };
+    db.collection('games').doc(GAME_CODE).collection('players').doc(PLAYER_ID).update({
+      ...update,
+      totalScore: firebase.firestore.FieldValue.increment(earned)
+    });
+  });
+
+  // ── Feedback ──
+  function showFeedback(correct, earned, myIdx, correctIdx) {
+    const icon = correct ? '✅' : '❌';
+    const msg  = correct ? 'Зөв хариулт!' : `Зөв хариулт: ${OPT_LABELS[correctIdx]}`;
+    document.getElementById('feedbackIcon').textContent = icon;
+    document.getElementById('feedbackScore').textContent = correct ? '+' + earned + ' оноо' : '0 оноо';
+    document.getElementById('feedbackScore').className = 'score-flash score-reveal ' + (correct ? 'correct' : 'wrong');
+    document.getElementById('feedbackMsg').textContent  = msg;
+    document.getElementById('feedbackTotal').textContent = '';
+    showView('feedbackOverlay');
+  }
+
+  // ── Review phase ──
+  function onReview() {
+    // If feedback is showing, keep it; game view will update when next question fires
+    if (!answered) {
+      // Didn't answer in time
+      const q = gameData.questions[currentQIdx];
+      showFeedback(false, 0, -1, q.correctIndex);
+    }
+  }
+
+  // ── Leaderboard ──
+  async function showLeaderboard() {
+    clearInterval(timerInterval);
+    const snap = await db.collection('games').doc(GAME_CODE).collection('players')
+      .orderBy('totalScore','desc').get();
+    const medals = ['🥇','🥈','🥉'];
+    const me = PLAYER_ID;
+    document.getElementById('lbList').innerHTML = snap.docs.map((d, i) => {
+      const p = d.data();
+      const isMe = d.id === me;
+      return `
+        <div class="lb-item ${i<3?'rank-'+(i+1):''}" style="${isMe?'border-color:var(--accent);background:rgba(108,99,255,.12)':''}">
+          <div class="lb-rank">${medals[i]||'#'+(i+1)}</div>
+          <div class="lb-avatar">${p.avatar}</div>
+          <div class="lb-name">${esc(p.name)}${isMe?' <span style="color:var(--accent);font-size:.8rem">(Та)</span>':''}</div>
+          <div class="lb-score">${p.totalScore||0} оноо</div>
+        </div>`;
+    }).join('');
+    showView('lbOverlay');
+  }
+
+  function showView(id) {
+    ['lobbyOverlay','gameScreen','feedbackOverlay','lbOverlay'].forEach(v => {
+      document.getElementById(v).classList.toggle('hidden', v !== id);
+    });
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+</script>
+</body>
+</html>
