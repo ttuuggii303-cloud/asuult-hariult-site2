@@ -370,6 +370,22 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
     <div id="auth-reg" style="display:none">
       <label>Таны нэр</label>
       <input id="r-name" placeholder="Жишээ: Дорж багш">
+      <div id="r-subj-wrap">
+        <label>Ямар хичээлийн багш вэ?</label>
+        <select id="r-subj">
+          <option value="math">📐 Математикийн багш</option>
+          <option value="mn">📖 Монгол хэл, уран зохиолын багш</option>
+          <option value="phys">⚡ Физикийн багш</option>
+          <option value="chem">🧪 Химийн багш</option>
+          <option value="bio">🧬 Биологийн багш</option>
+          <option value="hist">🏛️ Түүх, нийгмийн багш</option>
+          <option value="geo">🌍 Газарзүйн багш</option>
+          <option value="en">🇬🇧 Англи хэлний багш</option>
+          <option value="cs">💻 Мэдээлэл зүйн багш</option>
+          <option value="elem">🎒 Бага ангийн багш (1–4)</option>
+          <option value="all">📚 Бүх хичээл (Ерөнхий)</option>
+        </select>
+      </div>
       <label>Утасны дугаар</label>
       <input id="r-phone" type="tel" placeholder="99xxxxxx" maxlength="12">
       <label>Нууц үг (хамгийн багадаа 6 тэмдэгт)</label>
@@ -882,6 +898,8 @@ function switchRole(r) {
     student: 'Сурагчийн эрхээр нэвтэрч байна'
   };
   ge('auth-role-label').textContent = labels[r];
+  const sw = ge('r-subj-wrap');
+  if (sw) sw.style.display = r === 'teacher' ? '' : 'none';
   // reset to login tab
   switchTab('login');
 }
@@ -953,10 +971,11 @@ function doPhoneRegister() {
   }
 
   // Same phone allowed for different roles — stored under separate keys
-  users[key] = { name, phone, role: authRole, passHash: hashPass(pass) };
+  const subject = authRole === 'teacher' ? (ge('r-subj')?.value || 'all') : null;
+  users[key] = { name, phone, role: authRole, subject, passHash: hashPass(pass) };
   saveUsers(users);
 
-  const session = { phone, name, role: authRole };
+  const session = { phone, name, role: authRole, subject };
   saveSession(session);
   currentAccount = session;
   toast('Бүртгэл амжилттай! 🎉');
@@ -978,7 +997,7 @@ function doPhoneLogin() {
   if (!user) return showAuthErr('Энэ дугаар ' + (authRole==='teacher'?'багшаар':'сурагчаар') + ' бүртгэлгүй байна');
   if (user.passHash !== hashPass(pass)) return showAuthErr('Нууц үг буруу байна');
 
-  const session = { phone, name: user.name, role: authRole };
+  const session = { phone, name: user.name, role: authRole, subject: user.subject || 'all' };
   saveSession(session);
   currentAccount = session;
   toast('Тавтай морил, ' + user.name + '! 👋');
@@ -1095,9 +1114,24 @@ function renderStudentHistory() {
 // ═══════════════════════════════
 // DASHBOARD (TEACHER)
 // ═══════════════════════════════
+const TEACHER_SUBJ_INFO = {
+  math: { label:'📐 Математикийн багш', keys:['math_e','math_m','math_h'] },
+  mn:   { label:'📖 Монгол хэл, уран зохиолын багш', keys:['mn_e','mn_m'] },
+  phys: { label:'⚡ Физикийн багш', keys:['phys_m'] },
+  chem: { label:'🧪 Химийн багш', keys:['chem_m'] },
+  bio:  { label:'🧬 Биологийн багш', keys:['bio_m'] },
+  hist: { label:'🏛️ Түүх, нийгмийн багш', keys:['hist_m'] },
+  geo:  { label:'🌍 Газарзүйн багш', keys:['geo_m'] },
+  en:   { label:'🇬🇧 Англи хэлний багш', keys:['en_m'] },
+  cs:   { label:'💻 Мэдээлэл зүйн багш', keys:['cs_m'] },
+  elem: { label:'🎒 Бага ангийн багш', keys:['math_e','mn_e','sci_e'] },
+  all:  { label:'📚 Бүх хичээлийн багш', keys:null }
+};
+
 async function loadDashboard() {
   if (!currentAccount) return;
-  ge('dash-welcome').textContent = `Сайн байна уу, ${currentAccount.name||'багш'} 👋`;
+  const sInfo = TEACHER_SUBJ_INFO[currentAccount.subject || 'all'] || TEACHER_SUBJ_INFO.all;
+  ge('dash-welcome').textContent = `Сайн байна уу, ${currentAccount.name||'багш'} 👋  •  ${sInfo.label}`;
 
   const snap = await db.ref(`teachers/${currentAccount.phone}/sets`).get();
   const sets = snap.val() || {};
@@ -2172,10 +2206,19 @@ function toggleBankBox() {
   btn.textContent = open ? '🔽 Хаах' : '▶️ Нээх';
 }
 
+function allowedSubjKeys() {
+  const s = (currentAccount && currentAccount.subject) || 'all';
+  return (TEACHER_SUBJ_INFO[s] && TEACHER_SUBJ_INFO[s].keys) || null;
+}
+
 function initBankSelectors() {
   const lvlSel = ge('bank-level');
   if (!lvlSel) return;
-  lvlSel.innerHTML = Object.entries(BANK_CURRICULUM).map(([k, v]) =>
+  const allowed = allowedSubjKeys();
+  const levels = Object.entries(BANK_CURRICULUM).filter(([, v]) =>
+    !allowed || Object.keys(v.subjects).some(sk => allowed.includes(sk))
+  );
+  lvlSel.innerHTML = levels.map(([k, v]) =>
     `<option value="${k}">${v.label}</option>`
   ).join('');
   onBankLevelChange();
@@ -2183,10 +2226,14 @@ function initBankSelectors() {
 
 function onBankLevelChange() {
   const lvl = ge('bank-level').value;
-  const subjs = BANK_CURRICULUM[lvl]?.subjects || {};
-  ge('bank-subj').innerHTML = Object.entries(subjs).map(([k, v]) =>
+  const allSubjs = BANK_CURRICULUM[lvl]?.subjects || {};
+  const allowed = allowedSubjKeys();
+  const entries = Object.entries(allSubjs).filter(([k]) => !allowed || allowed.includes(k));
+  const subjSel = ge('bank-subj');
+  subjSel.innerHTML = entries.map(([k, v]) =>
     `<option value="${k}">${v.label}</option>`
   ).join('');
+  subjSel.disabled = entries.length <= 1;
   onBankSubjChange();
 }
 
