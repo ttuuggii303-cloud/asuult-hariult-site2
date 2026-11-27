@@ -1,1797 +1,1198 @@
 <!DOCTYPE html>
 <html lang="mn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Бүрэгхангай Зар - Сумын нэгдсэн мэдээллийн самбар</title>
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Бүрэгхангай Зар - Сумын нэгдсэн мэдээллийн самбар">
-  <meta property="og:description" content="Унаа тээвэр, мал ХАА, худалдаа наймаа, ажлын байр, сумын мэдээ зарлалын нэгдсэн самбар.">
-  <meta property="og:url" content="https://ttuuggii303-cloud.github.io/Buregkhangai-negdsen-zar/">
-  <meta property="og:image" content="https://ttuuggii303-cloud.github.io/Buregkhangai-negdsen-zar/bg2.jpg">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏔️</text></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { darkMode: 'class' };
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    html.modal-open, body.modal-open { overflow: hidden !important; height: 100%; }
-    @media (max-width: 768px) {
-      body { background-attachment: scroll !important; }
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>🏆 Асуулт Уралдаан</title>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<!-- QR Code -->
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+<style>
+/* ===== RESET ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;scroll-behavior:smooth}
+body{
+  background:#0b0b18;
+  color:#f0f4ff;
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  min-height:100vh;
+  line-height:1.55;
+}
 
-    /* Dark mode surface & text overrides */
-    html.dark body { color: #e5e7eb; }
-    html.dark #bgOverlay { background-color: rgba(0, 0, 0, 0.55) !important; }
-    html.dark .bg-white,
-    html.dark .bg-white\/95,
-    html.dark .bg-white\/90 { background-color: rgba(17, 24, 39, 0.96) !important; color: #f3f4f6; }
-    html.dark .bg-gray-50 { background-color: #1f2937 !important; }
-    html.dark .bg-gray-100 { background-color: #374151 !important; }
-    html.dark .bg-emerald-50,
-    html.dark .bg-emerald-50\/70,
-    html.dark .bg-emerald-50\/40 { background-color: rgba(6, 78, 59, 0.35) !important; }
-    html.dark .bg-sky-50 { background-color: rgba(12, 74, 110, 0.35) !important; }
-    html.dark .bg-violet-50 { background-color: rgba(76, 29, 149, 0.35) !important; }
-    html.dark .bg-amber-50,
-    html.dark .bg-amber-50\/70 { background-color: rgba(120, 53, 15, 0.35) !important; }
-    html.dark .text-gray-900 { color: #f9fafb !important; }
-    html.dark .text-gray-800 { color: #e5e7eb !important; }
-    html.dark .text-gray-700 { color: #d1d5db !important; }
-    html.dark .text-gray-600 { color: #9ca3af !important; }
-    html.dark .text-gray-500 { color: #9ca3af !important; }
-    html.dark .text-emerald-900,
-    html.dark .text-emerald-800 { color: #6ee7b7 !important; }
-    html.dark .text-emerald-700 { color: #34d399 !important; }
-    html.dark .text-sky-900 { color: #bae6fd !important; }
-    html.dark .text-violet-900 { color: #ddd6fe !important; }
-    html.dark .text-amber-900 { color: #fde68a !important; }
-    html.dark .border-gray-100,
-    html.dark .border-gray-200,
-    html.dark .border-gray-200\/90,
-    html.dark .border-gray-200\/80,
-    html.dark .border-gray-200\/70,
-    html.dark .border-gray-300,
-    html.dark .border-white { border-color: #374151 !important; }
-    html.dark .border-emerald-100,
-    html.dark .border-emerald-200 { border-color: rgba(16, 185, 129, 0.35) !important; }
-    html.dark input,
-    html.dark select,
-    html.dark textarea {
-      background-color: #1f2937 !important;
-      color: #f9fafb !important;
-      border-color: #4b5563 !important;
-    }
-    html.dark input::placeholder,
-    html.dark textarea::placeholder { color: #9ca3af !important; }
-  </style>
+/* ===== VIEWS ===== */
+.view{display:none;min-height:100vh;padding:16px;flex-direction:column;align-items:center}
+.view.active{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ===== TYPOGRAPHY ===== */
+h1{font-size:2rem;font-weight:800;margin-bottom:8px}
+h2{font-size:1.5rem;font-weight:700;margin-bottom:14px}
+h3{font-size:1.1rem;font-weight:600;margin-bottom:10px}
+.muted{color:#7a85a3}
+.center{text-align:center}
+
+/* ===== CARD ===== */
+.card{
+  background:#13132a;
+  border:1px solid #252547;
+  border-radius:18px;
+  padding:24px;
+  width:100%;
+  max-width:480px;
+  margin-bottom:16px;
+}
+.card.wide{max-width:860px}
+.card.full{max-width:100%;width:100%}
+
+/* ===== FORM ===== */
+label{display:block;font-size:.85rem;color:#7a85a3;margin-bottom:5px;font-weight:500}
+input,textarea,select{
+  display:block;width:100%;
+  padding:12px 14px;margin-bottom:12px;
+  font:inherit;color:#f0f4ff;background:#0b0b18;
+  border:1px solid #252547;border-radius:10px;font-size:1rem;outline:none;
+  transition:border-color .15s;
+}
+input:focus,textarea:focus,select:focus{border-color:#6366f1;box-shadow:0 0 0 3px #6366f130}
+textarea{min-height:80px;resize:vertical}
+input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
+
+/* ===== BUTTONS ===== */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 18px;border-radius:10px;border:1px solid #252547;
+  background:#13132a;color:#f0f4ff;font:inherit;font-weight:600;cursor:pointer;
+  transition:all .15s;font-size:.95rem;text-decoration:none;white-space:nowrap;
+}
+.btn:hover{border-color:#6366f1;background:#1e1e44}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:#6366f1;border-color:#6366f1;color:#fff}
+.btn-primary:hover{background:#4f52d8;border-color:#4f52d8}
+.btn-success{background:#22c55e;border-color:#22c55e;color:#fff}
+.btn-success:hover{background:#16a34a}
+.btn-danger{background:#ef4444;border-color:#ef4444;color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-warning{background:#f59e0b;border-color:#f59e0b;color:#111}
+.btn-warning:hover{background:#d97706}
+.btn-sm{padding:6px 12px;font-size:.82rem;border-radius:8px}
+.btn-lg{padding:14px 28px;font-size:1.1rem;border-radius:12px}
+.btn-full{width:100%;margin-bottom:10px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+/* ===== TABS ===== */
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:#0b0b18;border-radius:10px;padding:4px;border:1px solid #252547}
+.tab{flex:1;padding:9px;text-align:center;border-radius:7px;cursor:pointer;font-weight:600;color:#7a85a3;transition:all .15s;user-select:none}
+.tab.active{background:#6366f1;color:#fff}
+
+/* ===== BADGE ===== */
+.badge{display:inline-block;padding:4px 12px;border-radius:99px;font-size:.8rem;font-weight:700}
+.badge-green{background:#14532d;color:#86efac}
+.badge-blue{background:#1e3a8a;color:#93c5fd}
+.badge-red{background:#7f1d1d;color:#fca5a5}
+.badge-gold{background:#78350f;color:#fde68a}
+
+/* ===== TIMER RING ===== */
+.timer-wrap{position:relative;display:inline-block}
+.timer-wrap svg{transform:rotate(-90deg);display:block}
+.t-track{stroke:#1e1e3a;fill:none}
+.t-prog{fill:none;stroke-linecap:round;transition:stroke-dashoffset .15s linear,stroke .4s}
+.t-num{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-weight:800;line-height:1;
+}
+
+/* ===== ANSWER BUTTONS ===== */
+.ans-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.ans-btn{
+  padding:16px 12px;border-radius:14px;border:2px solid;
+  font-size:.98rem;font-weight:600;cursor:pointer;transition:all .18s;
+  text-align:left;line-height:1.35;min-height:72px;background:transparent;color:inherit;
+  display:flex;align-items:flex-start;gap:8px;
+}
+.ans-btn span.lbl{font-size:1.1rem;font-weight:800;min-width:22px}
+.ans-A{border-color:#ef4444;color:#fca5a5;background:#ef444415}
+.ans-B{border-color:#3b82f6;color:#93c5fd;background:#3b82f615}
+.ans-C{border-color:#22c55e;color:#86efac;background:#22c55e15}
+.ans-D{border-color:#f59e0b;color:#fde68a;background:#f59e0b15}
+.ans-btn:hover:not(:disabled){filter:brightness(1.25);transform:scale(1.03)}
+.ans-btn:disabled{cursor:default;transform:none!important}
+.ans-btn.correct{background:#22c55e!important;border-color:#22c55e!important;color:#fff!important}
+.ans-btn.wrong{background:#ef4444!important;border-color:#ef4444!important;color:#fff!important}
+.ans-btn.dimmed{opacity:.45}
+/* teacher view: show correct always */
+.ans-btn.teacher-correct{background:#22c55e!important;border-color:#22c55e!important;color:#fff!important}
+
+/* ===== LEADERBOARD ===== */
+.lb-row{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border-radius:12px;background:#13132a;border:1px solid #252547;margin-bottom:8px;
+}
+.lb-row.me{border-color:#6366f1;background:#1a1a40}
+.lb-rank{font-size:1.5rem;width:38px;text-align:center;flex-shrink:0}
+.lb-avatar{font-size:2rem;flex-shrink:0}
+.lb-info{flex:1;min-width:0}
+.lb-name{font-weight:700;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-sub{color:#7a85a3;font-size:.8rem}
+.lb-pts{font-size:1.5rem;font-weight:800;color:#6366f1;flex-shrink:0}
+
+/* ===== AVATAR / COLOR PICKERS ===== */
+.avatar-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.av-opt{font-size:2rem;cursor:pointer;padding:6px 7px;border-radius:10px;border:2px solid transparent;transition:all .15s;user-select:none}
+.av-opt:hover{background:#1e1e44}
+.av-opt.sel{border-color:#6366f1;background:#22224a}
+.color-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.col-opt{width:38px;height:38px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s}
+.col-opt.sel{border-color:#fff;transform:scale(1.25);box-shadow:0 0 0 2px #6366f1}
+
+/* ===== STUDENT CHIP ===== */
+.s-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 11px;border-radius:99px;
+  background:#13132a;border:1px solid;
+  margin:3px;font-size:.88rem;font-weight:600;
+}
+
+/* ===== PROGRESS BAR ===== */
+.prog-bar-wrap{height:8px;background:#1e1e3a;border-radius:99px;overflow:hidden;margin-bottom:8px;width:100%}
+.prog-bar{height:100%;background:#6366f1;border-radius:99px;transition:width .4s}
+
+/* ===== GAME HEADER ===== */
+.g-header{
+  width:100%;max-width:800px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0;border-bottom:1px solid #252547;margin-bottom:16px;
+  flex-wrap:wrap;gap:8px;
+}
+
+/* ===== Q BOX ===== */
+.q-box{
+  width:100%;max-width:700px;
+  background:#13132a;border:1px solid #252547;
+  border-radius:18px;padding:24px;margin-bottom:16px;
+}
+.q-text{font-size:1.4rem;font-weight:700;line-height:1.4;text-align:center;margin-bottom:4px}
+.q-label{color:#6366f1;font-weight:700;font-size:.9rem;margin-bottom:10px;text-align:center}
+
+/* ===== FEEDBACK BOX ===== */
+.feedback{text-align:center;padding:24px 16px}
+.feedback .ficon{font-size:4.5rem;display:block;margin-bottom:10px}
+.feedback .ftitle{font-size:1.8rem;font-weight:800;margin-bottom:6px}
+.feedback .fpts{font-size:2.8rem;font-weight:800;color:#6366f1;margin-bottom:8px}
+.feedback .fcorrect{color:#7a85a3;font-size:.95rem}
+
+/* ===== LIVE STATS ===== */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:700px;margin-bottom:16px}
+.stat-box{text-align:center;padding:14px 8px;background:#13132a;border-radius:12px;border:1px solid #252547}
+.stat-box .snum{font-size:2.2rem;font-weight:800}
+.stat-box .slbl{color:#7a85a3;font-size:.8rem;margin-top:2px}
+
+/* ===== SETUP STEPS ===== */
+.setup-ol{margin:14px 0;padding-left:20px}
+.setup-ol li{margin-bottom:8px;color:#7a85a3;line-height:1.5}
+.setup-ol li strong{color:#f0f4ff}
+.setup-ol li code{background:#0b0b18;padding:2px 7px;border-radius:5px;font-size:.85rem;border:1px solid #252547}
+
+/* ===== TOAST ===== */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  padding:12px 22px;border-radius:12px;font-weight:700;z-index:9999;
+  opacity:0;transition:opacity .22s;pointer-events:none;white-space:nowrap;
+  font-size:.95rem;box-shadow:0 4px 20px #0008;
+}
+#toast.show{opacity:1}
+
+/* ===== MISC ===== */
+.sep{border:none;border-top:1px solid #252547;margin:18px 0}
+.hero-icon{font-size:5rem;text-align:center;display:block;margin-bottom:12px}
+.big-num{font-size:3.5rem;font-weight:800;color:#6366f1;line-height:1}
+.back-btn{align-self:flex-start;margin-bottom:14px}
+.qr-wrap{background:#fff;padding:14px;border-radius:14px;display:inline-block;margin-bottom:12px}
+.qr-wrap canvas,#qr-box img{display:block}
+.pulse{animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.countdown-flash{animation:flash .3s ease}
+@keyframes flash{0%{background:#6366f120}100%{background:transparent}}
+
+/* ===== Q-EDITOR ===== */
+.qe-card{background:#0b0b18;border:1px solid #252547;border-radius:14px;padding:18px;margin-bottom:12px}
+.qe-num{color:#6366f1;font-weight:700;font-size:.85rem;margin-bottom:10px}
+.opt-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.opt-row .opt-lbl{font-weight:800;width:20px;text-align:center;flex-shrink:0}
+.opt-row input{margin:0;flex:1}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:420px){
+  h1{font-size:1.6rem}
+  .ans-grid{grid-template-columns:1fr}
+  .q-text{font-size:1.2rem}
+}
+@media(min-width:600px){
+  .view{padding:28px}
+}
+</style>
 </head>
-<body class="text-gray-800 pb-24 sm:pb-16 min-h-screen overflow-x-hidden" style="background-image: url('bg2.jpg'); background-size: cover; background-attachment: fixed; background-position: center;">
-  <div id="bgOverlay" class="fixed inset-0 bg-black/10 -z-10 pointer-events-none transition-colors duration-200"></div>
+<body>
+<div id="toast"></div>
 
-  <!-- 1. Толгой хэсэг (Header) -->
-  <header class="bg-emerald-800/95 backdrop-blur-md text-white sticky top-0 z-10 shadow-lg border-b border-emerald-600/30">
-    <div class="max-w-4xl mx-auto px-3 sm:px-5 py-3 sm:py-3.5 flex flex-wrap justify-between items-center gap-2.5 sm:gap-3">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-700/80 border border-emerald-500/40 flex items-center justify-center text-lg sm:text-xl shadow-inner">
-          🏔️
-        </div>
-        <div>
-          <h1 class="text-base sm:text-xl font-extrabold tracking-tight leading-tight">БҮРЭГХАНГАЙ ЗАР</h1>
-          <p class="text-[11px] sm:text-xs text-emerald-200/90">Сумын нэгдсэн мэдээллийн самбар</p>
-        </div>
+<!-- ══════════════════════════════════════════════════
+     SETUP VIEW  — Firebase тохиргоо
+══════════════════════════════════════════════════ -->
+<div id="v-setup" class="view">
+  <div class="card" style="max-width:580px;margin-top:40px">
+    <span class="hero-icon">🔧</span>
+    <h2 class="center">Firebase тохиргоо</h2>
+    <p class="muted center">Нэг удаа тохируулахад хангалттай. Дараа нь автоматаар хадгалагдана.</p>
+    <ol class="setup-ol">
+      <li>Браузерт <strong>console.firebase.google.com</strong> нээ</li>
+      <li>"<strong>Add project</strong>" → шинэ project нэр өг → үүсгэ</li>
+      <li>Project-доо <strong>&lt;/&gt;</strong> (Web) дарж app нэмэ, Firebase Hosting шаардлагагүй</li>
+      <li><strong>Authentication</strong> → Sign-in method → <strong>Email/Password</strong> идэвхжүүл</li>
+      <li><strong>Realtime Database</strong> → Create database → <strong>Test mode</strong> → "us-central1" байрлал сонго</li>
+      <li>⚙️ Project Settings → <strong>Firebase SDK snippet</strong> → "Config" → хуулж доор тавь</li>
+    </ol>
+    <label>Firebase Config (JSON — apiKey-с appId хүртэл бүгдийг оруул):</label>
+    <textarea id="fbConfig" placeholder='{"apiKey":"AIza...","authDomain":"xxx.firebaseapp.com","databaseURL":"https://xxx-default-rtdb.firebaseio.com","projectId":"xxx","storageBucket":"xxx.appspot.com","messagingSenderId":"111","appId":"1:111:web:aaa"}' style="min-height:130px;font-size:.82rem;font-family:monospace"></textarea>
+    <button class="btn btn-primary btn-full" onclick="setupFirebase()">✅ Хадгалаад эхлэх</button>
+    <p class="muted center" style="font-size:.78rem;margin-top:6px">⚠️ Хэрэв "databaseURL" байхгүй бол Realtime Database идэвхжүүлснийхаа дараа шинэчил</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     LANDING
+══════════════════════════════════════════════════ -->
+<div id="v-landing" class="view" style="justify-content:center">
+  <div class="card center" style="max-width:420px">
+    <span class="hero-icon">🏆</span>
+    <h1>Асуулт Уралдаан</h1>
+    <p class="muted" style="margin-bottom:20px">Багш асуулт тавьж, хүүхдүүд 60 секундын уралдаанд өрсөлдөнө!</p>
+    <button class="btn btn-primary btn-full btn-lg" onclick="showView('v-auth')">👩‍🏫 Багшаар нэвтрэх</button>
+    <div class="sep"></div>
+    <p class="muted" style="font-size:.85rem">📱 Хүүхдүүд QR код уншиж нэвтэрнэ</p>
+    <button class="btn btn-sm" style="margin-top:8px" onclick="showView('v-setup')">🔧 Firebase тохиргоо</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     AUTH — Багш нэвтрэх / бүртгүүлэх
+══════════════════════════════════════════════════ -->
+<div id="v-auth" class="view">
+  <button class="btn btn-sm back-btn" onclick="showView('v-landing')">← Буцах</button>
+  <div class="card">
+    <h2 class="center">Багш нэвтрэх</h2>
+    <div class="tabs">
+      <div class="tab active" id="tab-login" onclick="switchTab('login')">Нэвтрэх</div>
+      <div class="tab" id="tab-reg" onclick="switchTab('reg')">Бүртгүүлэх</div>
+    </div>
+    <!-- Login -->
+    <div id="auth-login">
+      <label>И-мэйл</label>
+      <input id="l-email" type="email" placeholder="bagsh@school.mn">
+      <label>Нууц үг</label>
+      <input id="l-pass" type="password" placeholder="••••••••">
+      <button class="btn btn-primary btn-full" onclick="doLogin()">Нэвтрэх →</button>
+    </div>
+    <!-- Register -->
+    <div id="auth-reg" style="display:none">
+      <label>Таны нэр</label>
+      <input id="r-name" placeholder="Дорж багш">
+      <label>И-мэйл</label>
+      <input id="r-email" type="email" placeholder="bagsh@school.mn">
+      <label>Нууц үг (хамгийн багадаа 6 тэмдэгт)</label>
+      <input id="r-pass" type="password" placeholder="••••••••">
+      <button class="btn btn-primary btn-full" onclick="doRegister()">Бүртгүүлэх →</button>
+    </div>
+    <p id="auth-err" style="color:#ef4444;text-align:center;display:none;margin-top:4px"></p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     DASHBOARD — Багшийн нүүр
+══════════════════════════════════════════════════ -->
+<div id="v-dashboard" class="view">
+  <div class="card wide full">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div>
+        <h2 style="margin:0">📚 Асуулт багцууд</h2>
+        <p class="muted" style="font-size:.85rem;margin:0" id="dash-welcome"></p>
       </div>
-      <div id="headerActions" class="hidden flex-wrap items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
-        <div id="authArea" class="flex items-center gap-1.5 sm:gap-2"></div>
-        <button onclick="openModal()" class="bg-amber-400 hover:bg-amber-300 active:scale-95 text-gray-900 font-bold px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm shadow-md transition cursor-pointer whitespace-nowrap">
-          + Зар оруулах
-        </button>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="openEditor(null)">➕ Шинэ багц</button>
+        <button class="btn btn-sm" onclick="doLogout()">🚪 Гарах</button>
       </div>
     </div>
-  </header>
+    <div id="set-list"><p class="muted center" style="padding:32px 0">Одоогоор багц байхгүй. «Шинэ багц» дарж нэмнэ үү!</p></div>
+  </div>
+</div>
 
-  <!-- 2. Нэвтрэх / Бүртгүүлэх дэлгэц -->
-  <section id="authGate" class="fixed inset-0 flex items-center justify-center px-3 sm:px-4 py-6 z-20 overflow-y-auto" style="background-image: url('bg.jpg'); background-size: cover; background-position: center;">
-    <div class="absolute inset-0 bg-black/20"></div>
-    <div class="relative bg-white/95 rounded-3xl p-5 sm:p-7 shadow-2xl border border-white w-full max-w-md max-h-[90vh] overflow-y-auto">
-      <div class="text-center mb-5">
-        <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-2xl shadow-sm">
-          🏔️
-        </div>
-        <h2 class="text-xl font-extrabold text-gray-900">Бүрэгхангай Зар</h2>
-        <p class="text-xs sm:text-sm text-gray-500 mt-1">Нэвтрэх эсвэл бүртгүүлэхийн тулд утасны дугаараа оруулна уу.</p>
-      </div>
-
-      <!-- Таб -->
-      <div class="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-xl mb-4">
-        <button type="button" id="tabLogin" onclick="switchAuthTab('login')" class="py-2 text-sm font-semibold rounded-lg transition cursor-pointer bg-white text-emerald-700 shadow-sm">
-          Нэвтрэх
-        </button>
-        <button type="button" id="tabRegister" onclick="switchAuthTab('register')" class="py-2 text-sm font-semibold rounded-lg transition cursor-pointer text-gray-600 hover:text-gray-900">
-          Бүртгүүлэх
-        </button>
-      </div>
-
-      <div id="authError" class="hidden mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium"></div>
-
-      <!-- Нэвтрэх форм — зөвхөн утасны дугаар -->
-      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3.5">
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1.5">Утасны дугаар *</label>
-          <input type="tel" id="loginPhone" required placeholder="88112233" inputmode="numeric"
-            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition">
-        </div>
-        <p class="text-[11px] text-gray-400">Бүртгэлтэй утасны дугаараа оруулаад нэвтэрнэ үү.</p>
-        <button type="submit" id="loginSubmitBtn" class="w-full py-2.5 text-sm font-bold bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white rounded-xl shadow-sm transition cursor-pointer">
-          Нэвтрэх
-        </button>
-      </form>
-
-      <!-- Бүртгүүлэх форм — нэр + утас -->
-      <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3.5 hidden">
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1.5">Таны нэр *</label>
-          <input type="text" id="regName" required placeholder="Жишээ: Б.Болд"
-            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1.5">Утасны дугаар *</label>
-          <input type="tel" id="regPhone" required placeholder="88112233" inputmode="numeric"
-            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition">
-        </div>
-        <p class="text-[11px] text-gray-400">Нэр, утасны дугаар оруулаад бүртгүүлнэ үү. Нууц үг шаардлагагүй.</p>
-        <button type="submit" id="registerSubmitBtn" class="w-full py-2.5 text-sm font-bold bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white rounded-xl shadow-sm transition cursor-pointer">
-          Бүртгүүлэх
-        </button>
-      </form>
+<!-- ══════════════════════════════════════════════════
+     EDITOR — Асуулт багц засах
+══════════════════════════════════════════════════ -->
+<div id="v-editor" class="view">
+  <button class="btn btn-sm back-btn" onclick="goToDash()">← Буцах</button>
+  <div class="card wide full">
+    <h2>✏️ Асуулт багц</h2>
+    <label>Багцийн нэр</label>
+    <input id="set-title" placeholder="жишээ: 7А анги — Математик">
+    <label>Асуултын тоо</label>
+    <div class="btn-group" id="cnt-btns" style="margin-bottom:16px">
+      <button class="btn" id="cnt-10" onclick="setQCount(10)">10</button>
+      <button class="btn" id="cnt-15" onclick="setQCount(15)">15</button>
+      <button class="btn" id="cnt-20" onclick="setQCount(20)">20</button>
+      <button class="btn" id="cnt-25" onclick="setQCount(25)">25</button>
     </div>
-  </section>
+    <div class="sep"></div>
+    <div id="q-editor-list"></div>
+    <button class="btn btn-success btn-full" style="margin-top:16px" onclick="saveSet()">💾 Хадгалах</button>
+  </div>
+</div>
 
-  <!-- 3. Үндсэн хуудас -->
-  <main id="mainContent" class="max-w-4xl mx-auto px-3 sm:px-5 mt-4 sm:mt-6 hidden">
-    <!-- Хайлт ба Шинэчлэх -->
-    <div class="mb-3.5 flex gap-2">
-      <div class="relative flex-1">
-        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">🔍</span>
-        <input type="text" id="searchInput" oninput="handleSearchInput()"
-          placeholder="Унаа, өвс, алдуул мал хайх..."
-          class="w-full pl-9 pr-9 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl border border-gray-200 bg-white/95 shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-600 transition">
-        <button type="button" id="clearSearchBtn" onclick="clearSearch()" title="Цэвэрлэх"
-          class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-sm font-bold px-1 cursor-pointer">
-          ✕
+<!-- ══════════════════════════════════════════════════
+     LOBBY — QR, хүлээлгийн өрөө
+══════════════════════════════════════════════════ -->
+<div id="v-lobby" class="view">
+  <button class="btn btn-sm back-btn" onclick="closeLobby()">← Уралдаан цуцлах</button>
+  <div class="card wide full">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <!-- QR side -->
+      <div style="flex:0 0 auto;text-align:center">
+        <h3>📱 QR код уншина уу</h3>
+        <div class="qr-wrap" id="qr-box"></div>
+        <p class="muted" style="font-size:.75rem;margin-bottom:6px;max-width:220px;word-break:break-all" id="join-url-txt"></p>
+        <div>
+          <span id="s-count-badge" class="badge badge-blue">0 / 40 суралцагч</span>
+        </div>
+      </div>
+      <!-- Students side -->
+      <div style="flex:1;min-width:220px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h3 style="margin:0">🎮 Нэвтэрсэн суралцагчид</h3>
+        </div>
+        <div id="lobby-students" style="max-height:280px;overflow-y:auto;margin-bottom:14px">
+          <p class="muted" id="lobby-empty">Суралцагч хүлээж байна...</p>
+        </div>
+        <div class="sep"></div>
+        <button class="btn btn-success btn-full btn-lg" id="start-btn" onclick="startGame()" disabled>
+          🚀 Уралдаан эхлүүлэх
         </button>
+        <p class="muted center" style="font-size:.85rem" id="start-hint">Дор хаяж 1 суралцагч нэвтэрсний дараа эхлүүлж болно</p>
       </div>
-      <button onclick="loadListings()" title="Заруудыг шинэчлэх"
-        class="px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white/95 hover:bg-emerald-50 active:scale-95 shadow-md text-sm font-semibold text-emerald-700 whitespace-nowrap cursor-pointer transition">
-        ↻<span class="hidden sm:inline"> Шинэчлэх</span>
-      </button>
     </div>
+  </div>
+</div>
 
-    <!-- Ангилал -->
-    <div id="categoryContainer" class="flex gap-2 overflow-x-auto pb-2.5 mb-3 no-scrollbar"></div>
-
-    <!-- Тоо ба төлөвийн мөр -->
-    <div id="resultsSummary" class="mb-3 flex items-center justify-between text-xs font-medium"></div>
-
-    <!-- Зарын жагсаалт -->
-    <div id="listingsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4"></div>
-
-    <!-- Гар утсанд зориулсан хурдан товч -->
-    <button onclick="openModal()" aria-label="Зар оруулах"
-      class="sm:hidden fixed bottom-5 right-4 z-30 bg-amber-400 hover:bg-amber-300 active:scale-95 text-gray-900 font-extrabold px-4 py-3 rounded-full shadow-xl border border-amber-300 flex items-center gap-1.5 text-sm cursor-pointer transition">
-      <span>＋</span> Зар нэмэх
-    </button>
-  </main>
-
-  <!-- 4. Зар оруулах цонх -->
-  <div id="listingModal" onclick="if(event.target === this) closeModal()" class="fixed inset-0 bg-black/50 backdrop-blur-[1px] z-50 hidden items-center justify-center p-3 sm:p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
-        <h3 class="text-lg font-extrabold text-gray-900">📝 Шинэ зар оруулах</h3>
-        <button onclick="closeModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 text-lg font-bold cursor-pointer transition">✕</button>
-      </div>
-
-      <form id="addListingForm" onsubmit="handleAddListing(event)" class="space-y-3.5">
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Ангилал</label>
-          <select id="newCategory" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600">
-            <option value="Унаа, тээвэр">🚗 Унаа, тээвэр</option>
-            <option value="Мал, ХАА">🐎 Мал, ХАА</option>
-            <option value="Худалдаа, наймаа">🛒 Худалдаа, наймаа</option>
-            <option value="Ажлын байр">💼 Ажлын байр</option>
-            <option value="Мэдээ, зарлал">📢 Мэдээ, зарлал</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Зарын гарчиг *</label>
-          <input type="text" id="newTitle" required placeholder="Жишээ: УБ руу маргааш өглөө явна"
-            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Дэлгэрэнгүй мэдээлэл</label>
-          <textarea id="newDescription" rows="3" placeholder="Хэдэн хүн авах, хаанаас хөдлөх гэх мэт..."
-            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600"></textarea>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Үнэ (Заавал биш)</label>
-            <input type="text" id="newPrice" placeholder="35,000"
-              class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Утасны дугаар *</label>
-            <input type="tel" id="newPhone" required placeholder="88112233" inputmode="numeric"
-              class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Зарын хугацаа</label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <select id="newExpiryPreset" onchange="applyExpiryPreset()"
-              class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600">
-              <option value="">— Хугацаа сонгох —</option>
-              <option value="1">1 өдөр</option>
-              <option value="3">3 өдөр</option>
-              <option value="7">7 өдөр</option>
-              <option value="14">14 өдөр</option>
-              <option value="30">30 өдөр</option>
-              <option value="custom">Өөрөө тохируулах</option>
-            </select>
-            <input type="date" id="newExpiryDate"
-              class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600">
-          </div>
-          <p class="text-[11px] text-gray-400 mt-1">Хоосон орхивол 30 хоног идэвхтэй байна.</p>
-        </div>
-
-        <label for="newIsUrgent" class="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 cursor-pointer">
-          <input type="checkbox" id="newIsUrgent" class="w-4 h-4 accent-amber-500 rounded">
-          <span class="text-xs font-semibold text-amber-900">🔥 Яаралтай зар (Дээгүүр онцолж харуулах)</span>
-        </label>
-
-        <div id="listingError" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium"></div>
-
-        <div class="pt-3 flex gap-2 justify-end border-t border-gray-100">
-          <button type="button" onclick="closeModal()" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer transition">Болих</button>
-          <button type="submit" id="listingSubmitBtn" class="px-5 py-2.5 text-sm font-bold bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white rounded-xl shadow-sm cursor-pointer transition">Нийтлэх</button>
-        </div>
-      </form>
+<!-- ══════════════════════════════════════════════════
+     TEACHER GAME VIEW
+══════════════════════════════════════════════════ -->
+<div id="v-tgame" class="view">
+  <!-- Header -->
+  <div class="g-header">
+    <div style="min-width:140px">
+      <div class="q-label" id="tg-qlabel" style="text-align:left;margin-bottom:4px">1-р асуулт</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="tg-prog" style="width:10%"></div></div>
+      <span id="tg-answered" class="badge badge-blue">0 хариулсан</span>
+    </div>
+    <!-- Timer -->
+    <div class="timer-wrap" id="tg-timer-wrap">
+      <svg width="90" height="90" viewBox="0 0 90 90">
+        <circle class="t-track" cx="45" cy="45" r="38" stroke-width="8"/>
+        <circle class="t-prog" id="tg-ring" cx="45" cy="45" r="38" stroke-width="8"
+          stroke-dasharray="238.8" stroke-dashoffset="0" stroke="#22c55e"/>
+      </svg>
+      <span class="t-num" id="tg-time" style="font-size:1.8rem;color:#22c55e">60</span>
+    </div>
+    <div class="btn-group" style="justify-content:flex-end">
+      <button class="btn btn-warning btn-sm" onclick="nextQuestion()">Дараагийн →</button>
     </div>
   </div>
 
-  <!-- 5. Нэр солих цонх (Settings) -->
-  <div id="settingsModal" onclick="if(event.target === this) closeSettings()" class="fixed inset-0 bg-black/50 backdrop-blur-[1px] z-50 hidden items-center justify-center p-3 sm:p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
-        <h3 class="text-lg font-extrabold text-gray-900">⚙️ Тохиргоо</h3>
-        <button onclick="closeSettings()" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 text-lg font-bold cursor-pointer transition">✕</button>
-      </div>
+  <!-- Question -->
+  <div class="q-box">
+    <p class="q-label" id="tg-qlabel2"></p>
+    <p class="q-text" id="tg-qtext">...</p>
+    <div class="ans-grid" id="tg-options"></div>
+  </div>
 
-      <!-- Харагдах байдал (Light / Dark mode) -->
-      <div class="mb-4 pb-4 border-b border-gray-100">
-        <label class="block text-xs font-semibold text-gray-700 mb-2">Харагдах горим</label>
-        <div class="grid grid-cols-2 gap-1.5 bg-gray-100 p-1 rounded-xl">
-          <button type="button" id="themeLightBtn" onclick="setTheme('light')"
-            class="py-2 text-xs sm:text-sm font-semibold rounded-lg transition cursor-pointer">
-            ☀️ Цайвар
-          </button>
-          <button type="button" id="themeDarkBtn" onclick="setTheme('dark')"
-            class="py-2 text-xs sm:text-sm font-semibold rounded-lg transition cursor-pointer">
-            🌙 Харанхуй
-          </button>
-        </div>
-      </div>
+  <!-- Live stats -->
+  <div class="stats-row">
+    <div class="stat-box"><div class="snum" id="tg-ncorrect" style="color:#22c55e">0</div><div class="slbl">✅ Зөв</div></div>
+    <div class="stat-box"><div class="snum" id="tg-nwrong" style="color:#ef4444">0</div><div class="slbl">❌ Буруу</div></div>
+    <div class="stat-box"><div class="snum" id="tg-nnone" style="color:#7a85a3">0</div><div class="slbl">⏳ Хариуллаагүй</div></div>
+  </div>
 
-      <div id="settingsMsg" class="hidden mb-3 p-3 rounded-xl text-xs font-medium"></div>
-      <form id="changeNameForm" onsubmit="handleChangeName(event)" class="space-y-3.5">
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Шинэ нэр *</label>
-          <input type="text" id="newDisplayName" required placeholder="Жишээ: Б.Болд"
-            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
-        </div>
-        <button type="submit" id="changeNameBtn" class="w-full py-2.5 text-sm font-bold bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white rounded-xl shadow-sm transition cursor-pointer">
-          Нэр хадгалах
-        </button>
-      </form>
+  <!-- Mini leaderboard -->
+  <div style="width:100%;max-width:700px">
+    <h3>🏆 Топ 5</h3>
+    <div id="tg-mini-lb"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TEACHER RESULTS
+══════════════════════════════════════════════════ -->
+<div id="v-tresults" class="view">
+  <div class="card wide full">
+    <h2 class="center">🏆 Эцсийн дүн</h2>
+    <div id="t-final-lb"></div>
+    <div class="sep"></div>
+    <button class="btn btn-primary btn-full" onclick="goToDash()">📚 Дашбоард руу</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     STUDENT JOIN
+══════════════════════════════════════════════════ -->
+<div id="v-sjoin" class="view">
+  <div class="card" style="max-width:440px;margin-top:30px">
+    <span class="hero-icon">🎮</span>
+    <h2 class="center">Уралдаанд нэгдэх</h2>
+    <label>Таны нэр (20 тэмдэгт)</label>
+    <input id="s-name" placeholder="Нэрээ бич..." maxlength="20">
+    <label>Дүр сонго</label>
+    <div class="avatar-grid" id="av-grid"></div>
+    <label>Өнгө сонго</label>
+    <div class="color-grid" id="col-grid"></div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="studentJoin()">✅ Нэгдэх</button>
+    <p id="sjoin-err" style="color:#ef4444;text-align:center;display:none;margin-top:4px"></p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     STUDENT WAITING
+══════════════════════════════════════════════════ -->
+<div id="v-swait" class="view" style="justify-content:center">
+  <div class="card center" style="max-width:420px">
+    <div id="sw-avatar" style="font-size:5rem;margin-bottom:10px">🦁</div>
+    <h2 id="sw-name">Нэр</h2>
+    <p class="muted">Багш уралдааныг эхлүүлэхийг хүлээж байна...</p>
+    <div style="margin-top:16px">
+      <span id="sw-cnt" class="badge badge-blue">? суралцагч нэгдсэн</span>
+    </div>
+    <div style="font-size:2rem;margin-top:24px" class="pulse">⏳</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     STUDENT GAME
+══════════════════════════════════════════════════ -->
+<div id="v-sgame" class="view">
+  <!-- Header -->
+  <div class="g-header" style="max-width:500px">
+    <span id="sg-qnum" class="badge badge-blue">1 / 10</span>
+    <!-- Timer -->
+    <div class="timer-wrap">
+      <svg width="110" height="110" viewBox="0 0 110 110">
+        <circle class="t-track" cx="55" cy="55" r="46" stroke-width="9"/>
+        <circle class="t-prog" id="sg-ring" cx="55" cy="55" r="46" stroke-width="9"
+          stroke-dasharray="289.0" stroke-dashoffset="0" stroke="#22c55e"/>
+      </svg>
+      <span class="t-num" id="sg-time" style="font-size:2.2rem;color:#22c55e">60</span>
+    </div>
+    <span id="sg-score" class="badge badge-gold" style="font-size:.9rem">0 оноо</span>
+  </div>
+
+  <!-- Question & options -->
+  <div class="q-box" style="max-width:500px" id="sg-q-box">
+    <p class="q-label" id="sg-qlabel"></p>
+    <p class="q-text" id="sg-qtext">...</p>
+    <div class="ans-grid" id="sg-options"></div>
+  </div>
+
+  <!-- Feedback (shown after answer) -->
+  <div id="sg-feedback" class="card" style="max-width:500px;display:none">
+    <div class="feedback">
+      <span class="ficon" id="sf-icon">✅</span>
+      <div class="ftitle" id="sf-title">Зөв!</div>
+      <div class="fpts" id="sf-pts">+34 оноо</div>
+      <p class="fcorrect" id="sf-correct"></p>
     </div>
   </div>
+</div>
 
-  <!-- 6. Сэтгэгдлийн цонх (Dedicated Comment View) -->
-  <div id="commentModal" onclick="if(event.target === this) closeComments()" class="fixed inset-0 bg-black/55 backdrop-blur-[1px] z-50 hidden items-center justify-center sm:p-4 overscroll-none">
-    <div id="commentModalBody" class="bg-white w-full h-full sm:h-auto sm:max-h-[88vh] sm:max-w-xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"></div>
+<!-- ══════════════════════════════════════════════════
+     STUDENT RESULTS
+══════════════════════════════════════════════════ -->
+<div id="v-sresults" class="view">
+  <div class="card center" style="max-width:440px;margin-top:30px">
+    <div id="sr-avatar" style="font-size:4.5rem;margin-bottom:8px">🏆</div>
+    <h2 id="sr-name">Нэр</h2>
+    <div class="big-num" id="sr-score" style="margin:12px 0">0</div>
+    <p class="muted">нийт оноо</p>
+    <div id="sr-rank" class="badge badge-green" style="font-size:1rem;margin-top:10px">🥇 1-р байр</div>
   </div>
-
-  <!-- 7. Хэрэглэгчийн профайл (Profile Modal) -->
-  <div id="profileModal" onclick="if(event.target === this) closeProfile()" class="fixed inset-0 bg-black/55 backdrop-blur-[1px] z-50 hidden items-center justify-center sm:p-4 overscroll-none">
-    <div id="profileModalBody" class="bg-white w-full h-full sm:h-auto sm:max-h-[88vh] sm:max-w-lg sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"></div>
+  <div class="card wide full">
+    <h3>🏆 Нийт дүн</h3>
+    <div id="sr-lb"></div>
   </div>
-
-  <!-- 8. Хуваалцсан зар (Зочид нэвтрэхээс өмнө харах) -->
-  <div id="sharedListingModal" onclick="if(event.target === this) closeSharedListing()" class="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-50 hidden items-center justify-center p-3 sm:p-4 overscroll-none">
-    <div id="sharedListingBody" class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto overscroll-contain"></div>
-  </div>
-
-  <!-- 9. Админ самбар (Admin Dashboard) -->
-  <div id="adminModal" onclick="if(event.target === this) closeAdminDashboard()" class="fixed inset-0 bg-black/55 backdrop-blur-[1px] z-50 hidden items-center justify-center sm:p-4 overscroll-none">
-    <div id="adminModalBody" class="bg-white w-full h-full sm:h-auto sm:max-h-[88vh] sm:max-w-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"></div>
-  </div>
-
-  <!-- 7. Мэдэгдэл (Toast) -->
-  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] hidden items-center gap-2 bg-gray-900/95 text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-full shadow-xl pointer-events-none"></div>
-
-  <script>
-    const SUPABASE_URL = "https://ixsnccckocqulywctvlv.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_Abw6EF6XLTpAu3zCcYro2g_jmSIRKUS";
-
-    const isCloudEnabled = Boolean(
-      SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase && typeof window.supabase.createClient === "function"
-    );
-    const sb = isCloudEnabled ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
-    const CATEGORIES = ["Бүгд", "Унаа, тээвэр", "Мал, ХАА", "Худалдаа, наймаа", "Ажлын байр", "Мэдээ, зарлал"];
-    const CATEGORY_META = {
-      "Бүгд": { icon: "📋", badge: "bg-gray-100 text-gray-800" },
-      "Унаа, тээвэр": { icon: "🚗", badge: "bg-sky-100 text-sky-800" },
-      "Мал, ХАА": { icon: "🐎", badge: "bg-emerald-100 text-emerald-800" },
-      "Худалдаа, наймаа": { icon: "🛒", badge: "bg-violet-100 text-violet-800" },
-      "Ажлын байр": { icon: "💼", badge: "bg-amber-100 text-amber-800" },
-      "Мэдээ, зарлал": { icon: "📢", badge: "bg-rose-100 text-rose-800" },
-      "Миний зарууд": { icon: "📌", badge: "bg-emerald-100 text-emerald-800" }
-    };
-    const STORAGE_KEYS = {
-      listings: "buregkhangai_listings",
-      users: "buregkhangai_users",
-      currentUser: "buregkhangai_current_user",
-      comments: "buregkhangai_comments",
-      reactions: "buregkhangai_reactions"
-    };
-    const REACTIONS = [
-      { key: "like", emoji: "👍", label: "Таалагдлаа" },
-      { key: "care", emoji: "🥰", label: "Дэмжиж байна" },
-      { key: "haha", emoji: "😂", label: "Инээдтэй" },
-      { key: "sad", emoji: "😢", label: "Харамсалтай" },
-      { key: "angry", emoji: "😡", label: "Ууртай" }
-    ];
-
-    let selectedCategory = "Бүгд";
-    let toastTimer = null;
-    let activeCommentListingId = null;
-    let activeProfileUser = null;
-    let adminStatsCache = null;
-    let pendingSharedZarId = new URLSearchParams(window.location.search).get("zar");
-    const replyTargetByListing = {};
-
-    const DEFAULT_LISTINGS = [
-      {
-        id: 1, category: "Унаа, тээвэр",
-        title: "Маргааш өглөө 08:00 цагт Бүрэгхангайгаас УБ явна",
-        description: "Суудлын тэргэнд 3 хүн авна. Ачаа багатай бол сайн. Драгон дээр буулгана.",
-        price: "35,000₮", phone: "88112233", isPinned: true, authorId: null, authorName: "Админ", createdAt: "10 минутын өмнө"
-      },
-      {
-        id: 2, category: "Мал, ХАА",
-        title: "Алдуул адуу сураглаж байна (Хүрэн зүсмийн морь)",
-        description: "Баруун талын гуяндаа саран тамгатай, 4 настай хүрэн морь алдагдсан тул харсан үзсэн хүн холбоо барина уу.",
-        price: "Шагналтай", phone: "99001122", isPinned: true, authorId: null, authorName: "Админ", createdAt: "1 цагийн өмнө"
-      },
-      {
-        id: 3, category: "Худалдаа, наймаа",
-        title: "Ногоон тэжээл болон өвс зарна",
-        description: "Энэ жилийн шинэ ургацын сайн чанарын боодолтой өвс болон ногоон тэжээл бөөнд нь болон ширхгээр зарна.",
-        price: "12,000₮", phone: "95554433", isPinned: false, authorId: null, authorName: "Админ", createdAt: "Өчигдөр"
-      }
-    ];
-
-    let listings = JSON.parse(localStorage.getItem(STORAGE_KEYS.listings)) || DEFAULT_LISTINGS;
-    let users = JSON.parse(localStorage.getItem(STORAGE_KEYS.users)) || [];
-    let comments = JSON.parse(localStorage.getItem(STORAGE_KEYS.comments)) || [];
-    let reactions = JSON.parse(localStorage.getItem(STORAGE_KEYS.reactions)) || [];
-    let currentUser = JSON.parse(localStorage.getItem(STORAGE_KEYS.currentUser)) || null;
-    if (sb && currentUser && currentUser.mode !== "cloud") {
-      currentUser = null;
-      localStorage.removeItem(STORAGE_KEYS.currentUser);
-    }
-
-    // ── Utility ──────────────────────────────────────────────
-    function escapeHtml(text) {
-      return String(text ?? "")
-        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-    }
-
-    function formatCommentContent(text) {
-      const escaped = escapeHtml(text);
-      return escaped.replace(/(^|\s)(@[\p{L}\p{N}._-]+)/gu,
-        '$1<span class="font-semibold text-emerald-700 bg-emerald-50 px-1 rounded">$2</span>');
-    }
-
-    function showToast(msg) {
-      const el = document.getElementById("toast");
-      el.textContent = msg;
-      el.classList.remove("hidden");
-      el.classList.add("flex");
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        el.classList.add("hidden");
-        el.classList.remove("flex");
-      }, 2600);
-    }
-
-    async function copyPhone(phone) {
-      try {
-        await navigator.clipboard.writeText(phone);
-        showToast(`📋 ${phone} дугаарыг хууллаа`);
-      } catch {
-        showToast(`📞 Утас: ${phone}`);
-      }
-    }
-
-    function getListingShareUrl(listingId) {
-      const url = new URL(window.location.href);
-      url.search = "";
-      url.hash = "";
-      url.searchParams.set("zar", listingId);
-      return url.toString();
-    }
-
-    async function shareListing(listingId) {
-      const shareUrl = getListingShareUrl(listingId);
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        showToast("🔗 Зарын холбоос хуулагдлаа! Facebook, IG дээр paste хийнэ үү");
-      } catch {
-        prompt("Зарын холбоосыг хуулж авна уу:", shareUrl);
-      }
-    }
-
-    function clearSharedUrlParam() {
-      const url = new URL(window.location.href);
-      if (url.searchParams.has("zar")) {
-        url.searchParams.delete("zar");
-        window.history.replaceState({}, "", url.toString());
-      }
-    }
-
-    function formatTimeAgo(isoOrText) {
-      if (!isoOrText) return "";
-      const date = new Date(isoOrText);
-      if (Number.isNaN(date.getTime())) return String(isoOrText);
-      const diffSec = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-      if (diffSec < 60) return "Дөнгөж сая";
-      const diffMin = Math.floor(diffSec / 60);
-      if (diffMin < 60) return `${diffMin} минутын өмнө`;
-      const diffHour = Math.floor(diffMin / 60);
-      if (diffHour < 24) return `${diffHour} цагийн өмнө`;
-      return `${Math.floor(diffHour / 24)} өдрийн өмнө`;
-    }
-
-    function normalizeListingRow(row) {
-      return {
-        id: row.id, category: row.category, title: row.title,
-        description: row.description || "", price: row.price || "Тохиролцоно",
-        phone: row.phone, isPinned: Boolean(row.is_pinned),
-        authorId: row.author_id, authorName: row.author_name || "Хэрэглэгч",
-        createdAt: formatTimeAgo(row.created_at), expiresAt: row.expires_at || null
-      };
-    }
-
-    function normalizePhone(raw) {
-      return String(raw || "").replace(/[\s-]+/g, "");
-    }
-
-    function applyExpiryPreset() {
-      const preset = document.getElementById("newExpiryPreset").value;
-      const dateInput = document.getElementById("newExpiryDate");
-      if (!preset || preset === "custom") { dateInput.value = ""; return; }
-      const d = new Date();
-      d.setDate(d.getDate() + parseInt(preset));
-      dateInput.value = d.toISOString().split("T")[0];
-    }
-
-    function isExpired(expiresAt) {
-      if (!expiresAt) return false;
-      return new Date(expiresAt) < new Date();
-    }
-
-    function formatExpiry(expiresAt) {
-      if (!expiresAt) return null;
-      if (isExpired(expiresAt)) return "⛔ Хугацаа дууссан";
-      const diffDays = Math.ceil((new Date(expiresAt) - Date.now()) / 86400000);
-      if (diffDays <= 0) return "⚠️ Өнөөдөр дуусна";
-      if (diffDays === 1) return "⚠️ Маргааш дуусна";
-      return `📅 ${diffDays} өдөр`;
-    }
-
-    function handleSearchInput() {
-      const input = document.getElementById("searchInput");
-      document.getElementById("clearSearchBtn").classList.toggle("hidden", !input.value);
-      renderListings();
-    }
-
-    function clearSearch() {
-      const input = document.getElementById("searchInput");
-      input.value = "";
-      document.getElementById("clearSearchBtn").classList.add("hidden");
-      renderListings();
-      input.focus();
-    }
-
-    // ── Auth ─────────────────────────────────────────────────
-    function showAuthError(msg) {
-      const el = document.getElementById("authError");
-      el.textContent = msg; el.classList.remove("hidden");
-    }
-    function hideAuthError() {
-      const el = document.getElementById("authError");
-      el.textContent = ""; el.classList.add("hidden");
-    }
-
-    function switchAuthTab(mode) {
-      hideAuthError();
-      const isLogin = mode === "login";
-      document.getElementById("loginForm").classList.toggle("hidden", !isLogin);
-      document.getElementById("registerForm").classList.toggle("hidden", isLogin);
-      const active = "py-2 text-sm font-semibold rounded-lg transition cursor-pointer bg-white text-emerald-700 shadow-sm";
-      const inactive = "py-2 text-sm font-semibold rounded-lg transition cursor-pointer text-gray-600 hover:text-gray-900";
-      document.getElementById("tabLogin").className = isLogin ? active : inactive;
-      document.getElementById("tabRegister").className = isLogin ? inactive : active;
-    }
-
-    // Бүртгүүлэх — зөвхөн нэр + утас
-    async function handleRegister(event) {
-      event.preventDefault();
-      hideAuthError();
-      const name = document.getElementById("regName").value.trim();
-      const phone = normalizePhone(document.getElementById("regPhone").value);
-
-      if (!name) { showAuthError("Нэрээ оруулна уу."); return; }
-      if (!/^\d{6,12}$/.test(phone)) {
-        showAuthError("Утасны дугаараа зөв оруулна уу (жишээ: 88112233).");
-        return;
-      }
-
-      const btn = document.getElementById("registerSubmitBtn");
-      btn.disabled = true; btn.textContent = "Бүртгэж байна...";
-
-      try {
-        if (sb) {
-          const { data, error } = await sb.rpc("register_user", { p_name: name, p_phone: phone });
-          if (error) {
-            if (error.code === "23505" || String(error.message).toLowerCase().includes("duplicate")) {
-              showAuthError("Энэ утасны дугаар аль хэдийн бүртгэгдсэн байна. Нэвтрэх хэсгээр орно уу.");
-            } else {
-              showAuthError(`Бүртгүүлэхэд алдаа гарлаа: ${error.message}`);
-            }
-            return;
-          }
-          document.getElementById("registerForm").reset();
-          completeLogin(data);
-        } else {
-          if (users.some(u => u.phone === phone)) {
-            showAuthError("Энэ утасны дугаар аль хэдийн бүртгэгдсэн байна.");
-            return;
-          }
-          const newUser = { id: Date.now(), name, phone, createdAt: new Date().toISOString() };
-          users.push(newUser);
-          localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
-          document.getElementById("registerForm").reset();
-          completeLogin(newUser);
-        }
-      } finally {
-        btn.disabled = false; btn.textContent = "Бүртгүүлэх";
-      }
-    }
-
-    // Нэвтрэх — зөвхөн утасны дугаар
-    async function handleLogin(event) {
-      event.preventDefault();
-      hideAuthError();
-      const phone = normalizePhone(document.getElementById("loginPhone").value);
-
-      if (!/^\d{6,12}$/.test(phone)) {
-        showAuthError("Утасны дугаараа зөв оруулна уу (жишээ: 88112233).");
-        return;
-      }
-
-      const btn = document.getElementById("loginSubmitBtn");
-      btn.disabled = true; btn.textContent = "Нэвтэрч байна...";
-
-      try {
-        if (sb) {
-          const { data, error } = await sb.rpc("login_user", { p_phone: phone });
-          if (error) { showAuthError(`Нэвтрэхэд алдаа гарлаа: ${error.message}`); return; }
-          if (!data) { showAuthError("Утасны дугаар олдсонгүй. Эхлээд бүртгүүлнэ үү."); return; }
-          document.getElementById("loginForm").reset();
-          completeLogin(data);
-        } else {
-          const user = users.find(u => u.phone === phone);
-          if (!user) { showAuthError("Утасны дугаар олдсонгүй. Эхлээд бүртгүүлнэ үү."); return; }
-          document.getElementById("loginForm").reset();
-          completeLogin(user);
-        }
-      } finally {
-        btn.disabled = false; btn.textContent = "Нэвтрэх";
-      }
-    }
-
-    function completeLogin(user) {
-      currentUser = {
-        id: user.id, name: user.name, phone: user.phone,
-        isAdmin: Boolean(user.isAdmin), mode: sb ? "cloud" : "local"
-      };
-      localStorage.setItem(STORAGE_KEYS.currentUser, JSON.stringify(currentUser));
-      updateAppView();
-    }
-
-    function logout() {
-      currentUser = null;
-      adminStatsCache = null;
-      localStorage.removeItem(STORAGE_KEYS.currentUser);
-      closeModal(); closeSettings(); closeComments(); closeProfile(); closeAdminDashboard();
-      document.getElementById("addListingForm").reset();
-      document.getElementById("searchInput").value = "";
-      document.getElementById("clearSearchBtn").classList.add("hidden");
-      selectedCategory = "Бүгд";
-      updateAppView();
-    }
-
-    // ── App View ─────────────────────────────────────────────
-    function updateAppView() {
-      const authGate = document.getElementById("authGate");
-      const mainContent = document.getElementById("mainContent");
-      const headerActions = document.getElementById("headerActions");
-      const authArea = document.getElementById("authArea");
-
-      if (currentUser) {
-        authGate.classList.add("hidden");
-        mainContent.classList.remove("hidden");
-        headerActions.classList.remove("hidden");
-        headerActions.classList.add("flex");
-
-        authArea.innerHTML = `
-          <button type="button" onclick="openProfile(${currentUser.id})" title="Миний профайл"
-            class="text-xs sm:text-sm bg-emerald-900/60 hover:bg-emerald-900 border border-emerald-500/40 px-2.5 sm:px-3 py-1.5 rounded-xl font-medium inline-flex items-center gap-1.5 cursor-pointer transition">
-            <span>👤</span>
-            <span class="max-w-[100px] sm:max-w-[180px] truncate">${escapeHtml(currentUser.name)}</span>
-            ${currentUser.isAdmin ? '<span class="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-amber-400 text-gray-900">Админ</span>' : ''}
-          </button>
-          ${currentUser.isAdmin ? `
-            <button type="button" onclick="openAdminDashboard()" title="Админ самбар"
-              class="text-xs sm:text-sm bg-amber-400/95 hover:bg-amber-300 text-gray-900 font-bold px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap">
-              📊<span class="hidden sm:inline"> Статистик</span>
-            </button>
-          ` : ''}
-          <button onclick="openSettings()" title="Тохиргоо"
-            class="text-xs sm:text-sm bg-emerald-900/60 hover:bg-emerald-900 text-emerald-100 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl transition cursor-pointer">
-            ⚙️
-          </button>
-          <button onclick="logout()"
-            class="text-xs sm:text-sm bg-emerald-900/60 hover:bg-emerald-900 text-emerald-100 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap">
-            Гарах
-          </button>
-        `;
-        renderCategories();
-        loadListings();
-      } else {
-        authGate.classList.remove("hidden");
-        mainContent.classList.add("hidden");
-        headerActions.classList.add("hidden");
-        headerActions.classList.remove("flex");
-        authArea.innerHTML = "";
-        switchAuthTab("login");
-      }
-    }
-
-    // ── Settings ─────────────────────────────────────────────
-    function syncBodyScrollLock() {
-      const anyOpen = ["listingModal", "settingsModal", "commentModal", "profileModal", "sharedListingModal", "adminModal"].some(id => {
-        const el = document.getElementById(id);
-        return el && !el.classList.contains("hidden");
-      });
-      document.documentElement.classList.toggle("modal-open", anyOpen);
-      document.body.classList.toggle("modal-open", anyOpen);
-    }
-
-    // ── Theme (Dark / Light) ─────────────────────────────────
-    const THEME_KEY = "buregkhangai_theme";
-
-    function applyTheme(mode) {
-      const isDark = mode === "dark";
-      document.documentElement.classList.toggle("dark", isDark);
-      updateThemeButtons(isDark);
-    }
-
-    function updateThemeButtons(isDark = document.documentElement.classList.contains("dark")) {
-      const lightBtn = document.getElementById("themeLightBtn");
-      const darkBtn = document.getElementById("themeDarkBtn");
-      if (!lightBtn || !darkBtn) return;
-      const active = "py-2 text-xs sm:text-sm font-bold rounded-lg transition cursor-pointer bg-emerald-700 text-white shadow-sm";
-      const inactive = "py-2 text-xs sm:text-sm font-semibold rounded-lg transition cursor-pointer text-gray-600 hover:text-gray-900";
-      lightBtn.className = isDark ? inactive : active;
-      darkBtn.className = isDark ? active : inactive;
-    }
-
-    function setTheme(mode) {
-      localStorage.setItem(THEME_KEY, mode);
-      applyTheme(mode);
-      showToast(mode === "dark" ? "🌙 Харанхуй горим идэвхжлээ" : "☀️ Цайвар горим идэвхжлээ");
-    }
-
-    function openSettings() {
-      if (!currentUser) return;
-      document.getElementById("newDisplayName").value = currentUser.name;
-      hideSettingsMsg();
-      updateThemeButtons();
-      const m = document.getElementById("settingsModal");
-      m.classList.remove("hidden"); m.classList.add("flex");
-      syncBodyScrollLock();
-      setTimeout(() => document.getElementById("newDisplayName").focus(), 50);
-    }
-
-    function closeSettings() {
-      const m = document.getElementById("settingsModal");
-      m.classList.add("hidden"); m.classList.remove("flex");
-      syncBodyScrollLock();
-    }
-
-    function showSettingsMsg(msg, isSuccess) {
-      const el = document.getElementById("settingsMsg");
-      el.textContent = msg;
-      el.className = `mb-3 p-3 rounded-xl text-xs font-medium ${isSuccess ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`;
-      el.classList.remove("hidden");
-    }
-    function hideSettingsMsg() {
-      const el = document.getElementById("settingsMsg");
-      el.textContent = ""; el.classList.add("hidden");
-    }
-
-    async function handleChangeName(event) {
-      event.preventDefault();
-      hideSettingsMsg();
-      const newName = document.getElementById("newDisplayName").value.trim();
-      if (!newName) { showSettingsMsg("Нэрээ оруулна уу.", false); return; }
-
-      const btn = document.getElementById("changeNameBtn");
-      btn.disabled = true; btn.textContent = "Хадгалж байна...";
-
-      try {
-        if (sb) {
-          const { error } = await sb.rpc("change_name", {
-            p_user_id: currentUser.id, p_new_name: newName
-          });
-          if (error) { showSettingsMsg(`Алдаа гарлаа: ${error.message}`, false); return; }
-        } else {
-          const user = users.find(u => u.id === currentUser.id);
-          if (user) { user.name = newName; localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users)); }
-        }
-        currentUser.name = newName;
-        localStorage.setItem(STORAGE_KEYS.currentUser, JSON.stringify(currentUser));
-        showSettingsMsg("✅ Нэр амжилттай солигдлоо!", true);
-        updateAppView();
-        showToast("✅ Нэр шинэчлэгдлээ");
-      } finally {
-        btn.disabled = false; btn.textContent = "Нэр хадгалах";
-      }
-    }
-
-    // ── Listings ─────────────────────────────────────────────
-    function renderLoadingSkeletons() {
-      const container = document.getElementById("listingsContainer");
-      container.innerHTML = Array.from({ length: 4 }, () => `
-        <div class="p-4 rounded-2xl bg-white shadow-md border border-gray-100 animate-pulse space-y-3">
-          <div class="flex justify-between">
-            <div class="h-5 w-24 bg-gray-200 rounded-lg"></div>
-            <div class="h-4 w-16 bg-gray-200 rounded"></div>
-          </div>
-          <div class="h-5 w-3/4 bg-gray-200 rounded"></div>
-          <div class="space-y-1.5">
-            <div class="h-3.5 w-full bg-gray-100 rounded"></div>
-            <div class="h-3.5 w-5/6 bg-gray-100 rounded"></div>
-          </div>
-          <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
-            <div class="h-5 w-20 bg-gray-200 rounded"></div>
-            <div class="h-9 w-28 bg-gray-200 rounded-xl"></div>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    async function loadListings() {
-      if (!currentUser) return;
-      const container = document.getElementById("listingsContainer");
-
-      if (sb) {
-        renderLoadingSkeletons();
-        const [listingsRes, commentsRes, reactionsRes] = await Promise.all([
-          sb.from("listings").select("*").order("is_pinned", { ascending: false }).order("created_at", { ascending: false }),
-          sb.from("listing_comments").select("*").order("created_at", { ascending: true }),
-          sb.from("listing_reactions").select("*")
-        ]);
-
-        if (listingsRes.error) {
-          container.innerHTML = `<div class="col-span-full text-center py-10 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm">Алдаа: ${escapeHtml(listingsRes.error.message)}</div>`;
-          return;
-        }
-        listings = (listingsRes.data || []).map(normalizeListingRow);
-        comments = commentsRes.error ? [] : (commentsRes.data || []).map(c => ({
-          id: c.id, listingId: c.listing_id, parentId: c.parent_id || null,
-          authorId: c.author_id, authorName: c.author_name || "Хэрэглэгч",
-          content: c.content, createdAt: formatTimeAgo(c.created_at)
-        }));
-        reactions = reactionsRes.error ? [] : (reactionsRes.data || []).map(r => ({
-          id: r.id, listingId: r.listing_id, userId: r.user_id, reaction: r.reaction
-        }));
-      } else {
-        listings = JSON.parse(localStorage.getItem(STORAGE_KEYS.listings)) || DEFAULT_LISTINGS;
-        comments = JSON.parse(localStorage.getItem(STORAGE_KEYS.comments)) || [];
-        reactions = JSON.parse(localStorage.getItem(STORAGE_KEYS.reactions)) || [];
-      }
-      renderCategories();
-      renderListings();
-      if (pendingSharedZarId) {
-        const target = listings.find(l => String(l.id) === String(pendingSharedZarId));
-        pendingSharedZarId = null;
-        if (target) {
-          openComments(target.id);
-        } else {
-          showToast("⚠️ Энэ зар устгагдсан эсвэл олдсонгүй");
-          clearSharedUrlParam();
-        }
-      }
-    }
-
-    function getVisibleCount(cat) {
-      if (!currentUser) return 0;
-      return listings.filter(item => {
-        const canDelete = item.authorId === currentUser.id || Boolean(currentUser.isAdmin);
-        if (isExpired(item.expiresAt) && !canDelete) return false;
-        if (cat === "Бүгд") return true;
-        if (cat === "Миний зарууд") return item.authorId === currentUser.id;
-        return item.category === cat;
-      }).length;
-    }
-
-    function renderCategories() {
-      const container = document.getElementById("categoryContainer");
-      container.innerHTML = [...CATEGORIES, "Миний зарууд"].map(cat => {
-        const meta = CATEGORY_META[cat] || { icon: "🏷️" };
-        const count = getVisibleCount(cat);
-        const isActive = selectedCategory === cat;
-        return `
-          <button onclick="selectCategory('${cat}')"
-            class="px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition cursor-pointer inline-flex items-center gap-1.5 shadow-sm ${
-              isActive
-                ? 'bg-emerald-700 text-white shadow-md ring-2 ring-emerald-400/50'
-                : 'bg-white/95 text-gray-700 border border-gray-200 hover:bg-emerald-50'
-            }">
-            <span>${meta.icon}</span>
-            <span>${cat}</span>
-            <span class="px-1.5 py-0.5 text-[10px] rounded-full ${isActive ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'}">${count}</span>
-          </button>
-        `;
-      }).join("");
-    }
-
-    function selectCategory(cat) {
-      selectedCategory = cat;
-      renderCategories();
-      renderListings();
-      if (pendingSharedZarId) {
-        const target = listings.find(l => String(l.id) === String(pendingSharedZarId));
-        pendingSharedZarId = null;
-        if (target) {
-          openComments(target.id);
-        } else {
-          showToast("⚠️ Энэ зар устгагдсан эсвэл олдсонгүй");
-          clearSharedUrlParam();
-        }
-      }
-    }
-
-    function renderListings() {
-      if (!currentUser) return;
-      const container = document.getElementById("listingsContainer");
-      const summary = document.getElementById("resultsSummary");
-      const q = document.getElementById("searchInput").value.trim().toLowerCase();
-
-      const filtered = listings.filter(item => {
-        const matchCat = selectedCategory === "Бүгд"
-          || (selectedCategory === "Миний зарууд" && item.authorId === currentUser.id)
-          || item.category === selectedCategory;
-        const matchSearch = !q
-          || (item.title || "").toLowerCase().includes(q)
-          || (item.description || "").toLowerCase().includes(q)
-          || (item.phone || "").toLowerCase().includes(q);
-        const canDelete = item.authorId === currentUser.id || Boolean(currentUser.isAdmin);
-        return matchCat && matchSearch && (!isExpired(item.expiresAt) || canDelete);
-      });
-
-      filtered.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
-
-      summary.innerHTML = `
-        <span class="inline-flex items-center gap-1.5 bg-white/90 text-gray-700 px-3 py-1 rounded-full shadow-sm border border-white">
-          <span>Нийт <strong>${filtered.length}</strong> зар</span>
-          ${q ? `<span class="text-emerald-700">• "${escapeHtml(q)}"</span>` : ''}
-        </span>
-      `;
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full text-center py-12 px-4 bg-white/95 rounded-2xl shadow-md border border-gray-100">
-            <div class="text-3xl mb-2">📭</div>
-            <p class="text-sm font-semibold text-gray-700">Тохирох зар олдсонгүй</p>
-            <p class="text-xs text-gray-400 mt-1">Хайлтын үгээ өөрчлөх эсвэл шинэ зар нэмнэ үү.</p>
-          </div>`;
-        return;
-      }
-
-      container.innerHTML = filtered.map(item => {
-        const canDelete = item.authorId === currentUser.id || Boolean(currentUser.isAdmin);
-        const meta = CATEGORY_META[item.category] || { icon: "🏷️", badge: "bg-emerald-100 text-emerald-800" };
-        const expiryText = formatExpiry(item.expiresAt);
-        const itemReactions = reactions.filter(r => r.listingId === item.id);
-        const myReaction = itemReactions.find(r => r.userId === currentUser.id)?.reaction || null;
-        const itemComments = comments.filter(c => c.listingId === item.id);
-
-        return `
-          <article class="p-4 rounded-2xl bg-white shadow-md hover:shadow-lg transition-all duration-200 ${item.isPinned ? 'border-2 border-amber-400 ring-1 ring-amber-200' : 'border border-gray-200/90'} flex flex-col justify-between">
-            <div>
-              <div class="flex justify-between items-start gap-2 mb-2">
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-lg ${meta.badge} whitespace-nowrap inline-flex items-center gap-1">
-                  <span>${meta.icon}</span> ${escapeHtml(item.category)}
-                </span>
-                <div class="flex items-center gap-1.5 flex-wrap justify-end">
-                  ${item.isPinned ? '<span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500 text-white shadow-sm">🔥 Яаралтай</span>' : ''}
-                  <span class="text-[11px] text-gray-400">${escapeHtml(item.createdAt)}</span>
-                  ${expiryText ? `<span class="text-[11px] font-medium px-1.5 py-0.5 rounded ${isExpired(item.expiresAt) ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}">${expiryText}</span>` : ''}
-                  ${canDelete ? `<button onclick="deleteListing(${item.id})" title="Устгах" class="w-6 h-6 rounded-md flex items-center justify-center text-xs text-gray-400 hover:text-red-600 hover:bg-red-50 cursor-pointer transition">✕</button>` : ''}
-                </div>
-              </div>
-              <h2 class="text-sm sm:text-base font-bold text-gray-900 leading-snug break-words">${escapeHtml(item.title)}</h2>
-              ${item.description ? `<p class="text-xs sm:text-sm text-gray-600 mt-1.5 leading-relaxed whitespace-pre-line break-words">${escapeHtml(item.description)}</p>` : ''}
-            </div>
-
-            <div class="mt-4 pt-3 border-t border-gray-100 space-y-3">
-              <div class="flex flex-wrap justify-between items-center gap-2">
-                <div class="min-w-0">
-                  <span class="font-extrabold text-emerald-700 text-sm sm:text-base">${escapeHtml(item.price)}</span>
-                  ${item.authorId
-                    ? `<button type="button" onclick="openProfile(${item.authorId}, '${escapeHtml(item.authorName || "Хэрэглэгч").replace(/'/g, "\\'")}')" class="block text-[11px] text-gray-500 hover:text-emerald-700 hover:underline truncate cursor-pointer text-left">👤 ${escapeHtml(item.authorName || "Хэрэглэгч")}</button>`
-                    : `<span class="block text-[11px] text-gray-400 truncate">👤 ${escapeHtml(item.authorName || "Хэрэглэгч")}</span>`
-                  }
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <button type="button" onclick="shareListing(${item.id})" title="Зарын линк хуулах (Facebook, IG)"
-                    class="px-2.5 py-2 rounded-xl border border-gray-200 bg-gray-50 hover:bg-emerald-50 hover:border-emerald-300 text-gray-600 hover:text-emerald-700 text-xs font-semibold cursor-pointer transition">
-                    🔗
-                  </button>
-                  <button type="button" onclick="copyPhone('${escapeHtml(item.phone)}')" title="Дугаар хуулах"
-                    class="px-2.5 py-2 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-semibold cursor-pointer transition">
-                    📋
-                  </button>
-                  <a href="tel:+976${escapeHtml(item.phone)}"
-                    class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl shadow-sm transition whitespace-nowrap">
-                    📞 ${escapeHtml(item.phone)}
-                  </a>
-                </div>
-              </div>
-
-              <!-- Reaction ба Сэтгэгдэл -->
-              <div class="pt-2.5 border-t border-gray-100 flex flex-wrap items-center justify-between gap-1.5">
-                <div class="flex items-center gap-1 flex-wrap">
-                  ${REACTIONS.map(r => {
-                    const count = itemReactions.filter(x => x.reaction === r.key).length;
-                    const active = myReaction === r.key;
-                    return `
-                      <button type="button" onclick="toggleReaction(${item.id}, '${r.key}')" title="${r.label}"
-                        class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold transition cursor-pointer active:scale-95 ${
-                          active
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-400 shadow-xs'
-                            : 'bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200/80'
-                        }">
-                        <span>${r.emoji}</span>
-                        ${count > 0 ? `<span>${count}</span>` : ''}
-                      </button>`;
-                  }).join("")}
-                </div>
-                <button type="button" onclick="openComments(${item.id})"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  💬 Сэтгэгдэл (${itemComments.length})
-                </button>
-              </div>
-            </div>
-          </article>`;
-      }).join("");
-    }
-
-    function showListingError(msg) {
-      const el = document.getElementById("listingError");
-      el.textContent = msg; el.classList.remove("hidden");
-    }
-    function hideListingError() {
-      const el = document.getElementById("listingError");
-      el.textContent = ""; el.classList.add("hidden");
-    }
-
-    async function handleAddListing(event) {
-      event.preventDefault();
-      if (!currentUser) return;
-      hideListingError();
-
-      const btn = document.getElementById("listingSubmitBtn");
-      btn.disabled = true; btn.textContent = "Хадгалж байна...";
-
-      try {
-        const category = document.getElementById("newCategory").value;
-        const title = document.getElementById("newTitle").value.trim();
-        const description = document.getElementById("newDescription").value.trim();
-        const priceInput = document.getElementById("newPrice").value.trim();
-        const price = priceInput ? `${priceInput}₮` : "Тохиролцоно";
-        const phone = normalizePhone(document.getElementById("newPhone").value);
-        const isPinned = document.getElementById("newIsUrgent").checked;
-        const expiryDateVal = document.getElementById("newExpiryDate").value;
-        const expiresAt = expiryDateVal
-          ? new Date(expiryDateVal + "T23:59:59").toISOString()
-          : new Date(Date.now() + 30 * 86400000).toISOString();
-
-        if (sb) {
-          const { data, error } = await sb.from("listings").insert({
-            category, title, description, price, phone,
-            is_pinned: isPinned, author_id: currentUser.id,
-            author_name: currentUser.name, expires_at: expiresAt
-          }).select().single();
-
-          if (error) { showListingError(`Алдаа гарлаа: ${error.message}`); return; }
-          listings.unshift(normalizeListingRow(data));
-        } else {
-          const newItem = {
-            id: Date.now(), category, title, description, price, phone,
-            isPinned, authorId: currentUser.id, authorName: currentUser.name,
-            createdAt: "Дөнгөж сая", expiresAt
-          };
-          listings.unshift(newItem);
-          localStorage.setItem(STORAGE_KEYS.listings, JSON.stringify(listings));
-        }
-
-        document.getElementById("addListingForm").reset();
-        closeModal();
-        renderCategories();
-        renderListings();
-        showToast("✅ Зар амжилттай нийтлэгдлээ!");
-      } finally {
-        btn.disabled = false; btn.textContent = "Нийтлэх";
-      }
-    }
-
-    async function deleteListing(id) {
-      if (!currentUser) return;
-      const target = listings.find(item => item.id === id);
-      if (!target || (target.authorId !== currentUser.id && !currentUser.isAdmin)) return;
-      if (!confirm("Энэ зарыг устгах уу?")) return;
-
-      if (sb) {
-        const { data, error } = await sb.rpc("delete_own_listing", {
-          p_listing_id: id, p_author_id: currentUser.id
-        });
-        if (error || !data) { showToast("❌ Зар устгахад алдаа гарлаа."); return; }
-      } else {
-        localStorage.setItem(STORAGE_KEYS.listings, JSON.stringify(
-          listings.filter(item => item.id !== id)
-        ));
-      }
-      listings = listings.filter(item => item.id !== id);
-      renderCategories();
-      renderListings();
-      showToast("🗑️ Зар устгагдлаа");
-    }
-
-    // ── Reactions & Comments ─────────────────────────────────
-    function openComments(listingId) {
-      if (!currentUser) return;
-      activeCommentListingId = listingId;
-      renderCommentModal();
-      const m = document.getElementById("commentModal");
-      m.classList.remove("hidden");
-      m.classList.add("flex");
-      syncBodyScrollLock();
-      setTimeout(() => document.getElementById("modalCommentInput")?.focus(), 60);
-    }
-
-    function closeComments() {
-      activeCommentListingId = null;
-      const m = document.getElementById("commentModal");
-      m.classList.add("hidden");
-      m.classList.remove("flex");
-      clearSharedUrlParam();
-      syncBodyScrollLock();
-    }
-
-    function renderCommentModal() {
-      if (!activeCommentListingId || !currentUser) return;
-      const item = listings.find(l => l.id === activeCommentListingId);
-      if (!item) { closeComments(); return; }
-
-      const body = document.getElementById("commentModalBody");
-      const meta = CATEGORY_META[item.category] || { icon: "🏷️", badge: "bg-emerald-100 text-emerald-800" };
-      const itemReactions = reactions.filter(r => r.listingId === item.id);
-      const myReaction = itemReactions.find(r => r.userId === currentUser.id)?.reaction || null;
-      const itemComments = comments.filter(c => c.listingId === item.id);
-      const topComments = itemComments.filter(c => !c.parentId);
-      const replyTarget = replyTargetByListing[item.id] || null;
-
-      const renderCommentCard = (c, isReply = false) => {
-        const canDelComment = c.authorId === currentUser.id || Boolean(currentUser.isAdmin);
-        const threadParentId = c.parentId || c.id;
-        const safeAuthor = escapeHtml(c.authorName).replace(/'/g, "\\'");
-        return `
-          <div class="${isReply ? 'bg-emerald-50/40 border border-emerald-100' : 'bg-gray-50 border border-gray-200/70'} rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm">
-            <div class="flex justify-between items-center gap-2 mb-1">
-              <span class="font-bold text-gray-900">👤 ${escapeHtml(c.authorName)}</span>
-              <div class="flex items-center gap-2.5">
-                <span class="text-[11px] text-gray-400">${escapeHtml(c.createdAt)}</span>
-                <button type="button" onclick="startReply(${item.id}, ${threadParentId}, '${safeAuthor}')"
-                  class="text-[11px] font-semibold text-emerald-700 hover:underline cursor-pointer">
-                  Хариулах
-                </button>
-                ${canDelComment ? `<button type="button" onclick="deleteComment(${item.id}, ${c.id})" title="Устгах" class="text-xs text-gray-400 hover:text-red-600 cursor-pointer">✕</button>` : ''}
-              </div>
-            </div>
-            <p class="text-gray-700 whitespace-pre-line break-words leading-relaxed">${formatCommentContent(c.content)}</p>
-          </div>`;
-      };
-
-      body.innerHTML = `
-        <!-- Дээд толгой хэсэг: Зүүн дээд буланд Гарах / Буцах товч -->
-        <div class="bg-emerald-800 text-white px-3 sm:px-4 py-3 flex items-center justify-between gap-2 shrink-0">
-          <button type="button" onclick="closeComments()"
-            class="inline-flex items-center gap-1.5 bg-emerald-900/80 hover:bg-emerald-950 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl cursor-pointer transition">
-            ← Буцах
-          </button>
-          <span class="text-sm sm:text-base font-bold truncate">💬 Сэтгэгдэл (${itemComments.length})</span>
-          <button type="button" onclick="shareListing(${item.id})" title="Линк хуулах"
-            class="inline-flex items-center gap-1 bg-emerald-900/80 hover:bg-emerald-950 active:scale-95 text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl cursor-pointer transition">
-            🔗 Линк
-          </button>
-        </div>
-
-        <!-- Зарын товч мэдээлэл + Reaction -->
-        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 shrink-0 space-y-2">
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md ${meta.badge}">${meta.icon} ${escapeHtml(item.category)}</span>
-            <a href="tel:+976${escapeHtml(item.phone)}" class="text-xs font-bold text-emerald-700 hover:underline">📞 ${escapeHtml(item.phone)}</a>
-          </div>
-          <h4 class="text-sm sm:text-base font-bold text-gray-900 leading-snug">${escapeHtml(item.title)}</h4>
-          ${item.description ? `<p class="text-xs text-gray-600 line-clamp-2 whitespace-pre-line">${escapeHtml(item.description)}</p>` : ''}
-          <div class="flex items-center gap-1.5 flex-wrap pt-1">
-            ${REACTIONS.map(r => {
-              const count = itemReactions.filter(x => x.reaction === r.key).length;
-              const active = myReaction === r.key;
-              return `
-                <button type="button" onclick="toggleReaction(${item.id}, '${r.key}')" title="${r.label}"
-                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition cursor-pointer active:scale-95 ${
-                    active
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-400'
-                      : 'bg-white hover:bg-gray-100 text-gray-600 border border-gray-200'
-                  }">
-                  <span>${r.emoji}</span>
-                  ${count > 0 ? `<span>${count}</span>` : ''}
-                </button>`;
-            }).join("")}
-          </div>
-        </div>
-
-        <!-- Сэтгэгдлийн жагсаалт -->
-        <div class="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3 bg-white">
-          ${itemComments.length === 0
-            ? `<div class="text-center py-10 text-gray-400">
-                 <div class="text-3xl mb-2">💬</div>
-                 <p class="text-sm font-medium text-gray-500">Одоогоор сэтгэгдэл алга</p>
-                 <p class="text-xs text-gray-400 mt-1">Анхны сэтгэгдлийг доор бичиж үлдээнэ үү!</p>
-               </div>`
-            : topComments.map(c => {
-                const replies = itemComments.filter(r => r.parentId === c.id);
-                return `
-                  <div class="space-y-2">
-                    ${renderCommentCard(c, false)}
-                    ${replies.length > 0 ? `
-                      <div class="ml-4 sm:ml-6 pl-3 border-l-2 border-emerald-200 space-y-2">
-                        ${replies.map(r => renderCommentCard(r, true)).join("")}
-                      </div>
-                    ` : ''}
-                  </div>`;
-              }).join("")
-          }
-        </div>
-
-        <!-- Доод бичих хэсэг -->
-        <div class="p-3 sm:p-4 border-t border-gray-200 bg-gray-50 shrink-0 space-y-2">
-          ${replyTarget ? `
-            <div class="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
-              <span>↩️ <strong>@${escapeHtml(replyTarget.authorName)}</strong>-д хариулж байна</span>
-              <button type="button" onclick="cancelReply(${item.id})" class="text-emerald-700 hover:text-red-600 font-bold cursor-pointer">✕</button>
-            </div>
-          ` : ''}
-          <form onsubmit="handleAddComment(event, ${item.id})" class="flex gap-2">
-            <input type="text" id="modalCommentInput" required
-              placeholder="${replyTarget ? `@${escapeHtml(replyTarget.authorName)} хариу бичих...` : 'Сэтгэгдэл бичих... (@нэр дурдах боломжтой)'}"
-              class="flex-1 min-w-0 border border-gray-300 bg-white rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
-            <button type="submit"
-              class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-sm font-bold rounded-xl cursor-pointer transition whitespace-nowrap">
-              Илгээх
-            </button>
-          </form>
-        </div>
-      `;
-    }
-
-    async function toggleReaction(listingId, reactionKey) {
-      if (!currentUser) return;
-      const existingIdx = reactions.findIndex(
-        r => r.listingId === listingId && r.userId === currentUser.id
-      );
-
-      if (sb) {
-        const { data, error } = await sb.rpc("toggle_listing_reaction", {
-          p_listing_id: listingId,
-          p_user_id: currentUser.id,
-          p_reaction: reactionKey
-        });
-        if (error) {
-          console.error("Reaction error:", error);
-          showToast(`❌ Алдаа: ${error.message}`);
-          return;
-        }
-        if (existingIdx !== -1) reactions.splice(existingIdx, 1);
-        if (data && data.active) {
-          reactions.push({
-            id: data.id || Date.now(),
-            listingId,
-            userId: currentUser.id,
-            reaction: reactionKey
-          });
-        }
-      } else {
-        if (existingIdx !== -1) {
-          const prev = reactions[existingIdx].reaction;
-          reactions.splice(existingIdx, 1);
-          if (prev !== reactionKey) {
-            reactions.push({ id: Date.now(), listingId, userId: currentUser.id, reaction: reactionKey });
-          }
-        } else {
-          reactions.push({ id: Date.now(), listingId, userId: currentUser.id, reaction: reactionKey });
-        }
-        localStorage.setItem(STORAGE_KEYS.reactions, JSON.stringify(reactions));
-      }
-      renderListings();
-      if (activeCommentListingId === listingId) renderCommentModal();
-    }
-
-    function startReply(listingId, parentId, authorName) {
-      replyTargetByListing[listingId] = { parentId, authorName };
-      renderCommentModal();
-      setTimeout(() => {
-        const input = document.getElementById("modalCommentInput");
-        if (!input) return;
-        const mention = `@${authorName.replace(/\s+/g, "_")} `;
-        if (!input.value.startsWith("@")) {
-          input.value = mention + input.value;
-        }
-        input.focus();
-        input.setSelectionRange(input.value.length, input.value.length);
-      }, 40);
-    }
-
-    function cancelReply(listingId) {
-      delete replyTargetByListing[listingId];
-      renderCommentModal();
-    }
-
-    async function handleAddComment(event, listingId) {
-      event.preventDefault();
-      if (!currentUser) return;
-      const input = document.getElementById("modalCommentInput");
-      const content = input ? input.value.trim() : "";
-      if (!content) return;
-
-      const replyTarget = replyTargetByListing[listingId] || null;
-      const parentId = replyTarget ? replyTarget.parentId : null;
-
-      if (sb) {
-        const payload = {
-          listing_id: listingId,
-          author_id: currentUser.id,
-          author_name: currentUser.name,
-          content
-        };
-        if (parentId) payload.parent_id = parentId;
-
-        const { data, error } = await sb.from("listing_comments").insert(payload).select().single();
-
-        if (error) {
-          console.error("Comment error:", error);
-          showToast(`❌ Сэтгэгдлийн алдаа: ${error.message}`);
-          return;
-        }
-        comments.push({
-          id: data.id, listingId: data.listing_id, parentId: data.parent_id || null,
-          authorId: data.author_id, authorName: data.author_name,
-          content: data.content, createdAt: formatTimeAgo(data.created_at)
-        });
-      } else {
-        comments.push({
-          id: Date.now(), listingId, parentId, authorId: currentUser.id,
-          authorName: currentUser.name, content, createdAt: "Дөнгөж сая"
-        });
-        localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(comments));
-      }
-
-      delete replyTargetByListing[listingId];
-      renderListings();
-      if (activeCommentListingId === listingId) renderCommentModal();
-      showToast(parentId ? "↩️ Хариу нэмэгдлээ" : "💬 Сэтгэгдэл нэмэгдлээ");
-    }
-
-    async function deleteComment(listingId, commentId) {
-      if (!currentUser) return;
-      if (!confirm("Энэ сэтгэгдлийг устгах уу?")) return;
-
-      if (sb) {
-        const { data, error } = await sb.rpc("delete_own_comment", {
-          p_comment_id: commentId,
-          p_user_id: currentUser.id
-        });
-        if (error || !data) {
-          showToast("❌ Сэтгэгдэл устгахад алдаа гарлаа.");
-          return;
-        }
-      } else {
-        localStorage.setItem(
-          STORAGE_KEYS.comments,
-          JSON.stringify(comments.filter(c => c.id !== commentId && c.parentId !== commentId))
-        );
-      }
-      comments = comments.filter(c => c.id !== commentId && c.parentId !== commentId);
-      renderListings();
-      if (activeCommentListingId === listingId) renderCommentModal();
-      showToast("🗑️ Сэтгэгдэл устгагдлаа");
-    }
-
-    function openModal() {
-      if (!currentUser) return;
-      hideListingError();
-      const phoneField = document.getElementById("newPhone");
-      if (!phoneField.value) phoneField.value = currentUser.phone;
-      const m = document.getElementById("listingModal");
-      m.classList.remove("hidden"); m.classList.add("flex");
-      syncBodyScrollLock();
-      setTimeout(() => document.getElementById("newTitle").focus(), 50);
-    }
-
-    function closeModal() {
-      hideListingError();
-      const m = document.getElementById("listingModal");
-      m.classList.add("hidden"); m.classList.remove("flex");
-      document.getElementById("newExpiryPreset").value = "";
-      document.getElementById("newExpiryDate").value = "";
-      syncBodyScrollLock();
-    }
-
-    // ── Profile ──────────────────────────────────────────────
-    function openProfile(userId, fallbackName = "") {
-      if (!currentUser) return;
-      const isMe = userId === currentUser.id;
-      const fromListing = listings.find(l => l.authorId === userId);
-      const fromComment = comments.find(c => c.authorId === userId);
-      const name = isMe
-        ? currentUser.name
-        : (fallbackName || fromListing?.authorName || fromComment?.authorName || "Хэрэглэгч");
-
-      activeProfileUser = {
-        id: userId,
-        name,
-        phone: isMe ? currentUser.phone : (fromListing?.phone || ""),
-        isAdmin: isMe ? Boolean(currentUser.isAdmin) : false
-      };
-      renderProfileModal();
-      const m = document.getElementById("profileModal");
-      m.classList.remove("hidden");
-      m.classList.add("flex");
-      syncBodyScrollLock();
-    }
-
-    function closeProfile() {
-      activeProfileUser = null;
-      const m = document.getElementById("profileModal");
-      m.classList.add("hidden");
-      m.classList.remove("flex");
-      syncBodyScrollLock();
-    }
-
-    function getInitials(name) {
-      const parts = String(name || "Х").trim().split(/\s+/);
-      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-      return String(name || "Х").slice(0, 2).toUpperCase();
-    }
-
-    function renderProfileModal() {
-      if (!activeProfileUser || !currentUser) return;
-      const body = document.getElementById("profileModalBody");
-      const isMe = activeProfileUser.id === currentUser.id;
-      const userListings = listings.filter(l => {
-        if (l.authorId !== activeProfileUser.id) return false;
-        const canDelete = isMe || Boolean(currentUser.isAdmin);
-        return !isExpired(l.expiresAt) || canDelete;
-      });
-      const userCommentCount = comments.filter(c => c.authorId === activeProfileUser.id).length;
-
-      body.innerHTML = `
-        <div class="bg-emerald-800 text-white px-3 sm:px-4 py-3 flex items-center justify-between gap-2 shrink-0">
-          <button type="button" onclick="closeProfile()"
-            class="inline-flex items-center gap-1.5 bg-emerald-900/80 hover:bg-emerald-950 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl cursor-pointer transition">
-            ← Буцах
-          </button>
-          <span class="text-sm sm:text-base font-bold truncate">${isMe ? "👤 Миний профайл" : "👤 Хэрэглэгчийн профайл"}</span>
-          <div class="w-16"></div>
-        </div>
-
-        <div class="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-4 bg-white">
-          <!-- Хэрэглэгчийн карт -->
-          <div class="flex items-center gap-3.5 p-4 rounded-2xl bg-emerald-50/70 border border-emerald-100">
-            <div class="w-14 h-14 rounded-2xl bg-emerald-700 text-white font-extrabold text-lg flex items-center justify-center shadow-sm shrink-0">
-              ${escapeHtml(getInitials(activeProfileUser.name))}
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="text-base sm:text-lg font-extrabold text-gray-900 truncate">${escapeHtml(activeProfileUser.name)}</h3>
-                ${activeProfileUser.isAdmin ? '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-amber-400 text-gray-900">Админ</span>' : ''}
-              </div>
-              ${activeProfileUser.phone ? `<p class="text-xs text-gray-600 mt-0.5">📞 ${escapeHtml(activeProfileUser.phone)}</p>` : ''}
-              <div class="flex items-center gap-3 mt-2 text-xs font-semibold text-emerald-800">
-                <span class="bg-white px-2.5 py-1 rounded-lg border border-emerald-100 shadow-2xs">📋 ${userListings.length} зар</span>
-                <span class="bg-white px-2.5 py-1 rounded-lg border border-emerald-100 shadow-2xs">💬 ${userCommentCount} сэтгэгдэл</span>
-              </div>
-            </div>
-          </div>
-
-          ${isMe ? `
-            <!-- Өөрийн нэр засах -->
-            <form onsubmit="handleProfileChangeName(event)" class="p-3.5 rounded-2xl bg-gray-50 border border-gray-200/80 space-y-2">
-              <label class="block text-xs font-semibold text-gray-700">Нэр өөрчлөх</label>
-              <div class="flex gap-2">
-                <input type="text" id="profileDisplayName" required value="${escapeHtml(currentUser.name)}"
-                  class="flex-1 min-w-0 border border-gray-300 bg-white rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
-                <button type="submit" id="profileSaveNameBtn"
-                  class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl cursor-pointer transition whitespace-nowrap">
-                  Хадгалах
-                </button>
-              </div>
-            </form>
-          ` : ''}
-
-          <!-- Оруулсан зарууд -->
-          <div>
-            <h4 class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2.5">
-              ${isMe ? "Миний оруулсан зарууд" : "Оруулсан зарууд"} (${userListings.length})
-            </h4>
-            ${userListings.length === 0
-              ? `<div class="text-center py-8 bg-gray-50 rounded-2xl border border-gray-100 text-gray-400 text-xs">
-                   Одоогоор зар оруулаагүй байна.
-                 </div>`
-              : `<div class="space-y-2.5">
-                   ${userListings.map(item => {
-                     const meta = CATEGORY_META[item.category] || { icon: "🏷️", badge: "bg-emerald-100 text-emerald-800" };
-                     return `
-                       <div class="p-3 rounded-xl bg-white border border-gray-200 shadow-2xs flex justify-between items-start gap-2">
-                         <div class="min-w-0 flex-1">
-                           <div class="flex items-center gap-1.5 mb-1 flex-wrap">
-                             <span class="text-[10px] font-semibold px-2 py-0.5 rounded ${meta.badge}">${meta.icon} ${escapeHtml(item.category)}</span>
-                             <span class="text-[10px] text-gray-400">${escapeHtml(item.createdAt)}</span>
-                           </div>
-                           <p class="text-xs sm:text-sm font-bold text-gray-900 truncate">${escapeHtml(item.title)}</p>
-                           <span class="text-xs font-bold text-emerald-700">${escapeHtml(item.price)}</span>
-                         </div>
-                         <button type="button" onclick="closeProfile(); openComments(${item.id});"
-                           class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-semibold cursor-pointer whitespace-nowrap transition">
-                           Харах →
-                         </button>
-                       </div>`;
-                   }).join("")}
-                 </div>`
-            }
-          </div>
-        </div>
-      `;
-    }
-
-    async function handleProfileChangeName(event) {
-      event.preventDefault();
-      if (!currentUser) return;
-      const input = document.getElementById("profileDisplayName");
-      const newName = input ? input.value.trim() : "";
-      if (!newName) return;
-
-      const btn = document.getElementById("profileSaveNameBtn");
-      btn.disabled = true; btn.textContent = "Хадгалж байна...";
-
-      try {
-        if (sb) {
-          const { error } = await sb.rpc("change_name", {
-            p_user_id: currentUser.id, p_new_name: newName
-          });
-          if (error) { showToast(`❌ Алдаа: ${error.message}`); return; }
-        } else {
-          const user = users.find(u => u.id === currentUser.id);
-          if (user) { user.name = newName; localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users)); }
-        }
-        currentUser.name = newName;
-        localStorage.setItem(STORAGE_KEYS.currentUser, JSON.stringify(currentUser));
-        if (activeProfileUser && activeProfileUser.id === currentUser.id) {
-          activeProfileUser.name = newName;
-        }
-        updateAppView();
-        renderProfileModal();
-        showToast("✅ Нэр шинэчлэгдлээ");
-      } finally {
-        btn.disabled = false; btn.textContent = "Хадгалах";
-      }
-    }
-
-    async function loadSharedListingForGuest() {
-      if (currentUser || !pendingSharedZarId) return;
-      const modal = document.getElementById("sharedListingModal");
-      const body = document.getElementById("sharedListingBody");
-      let item = null;
-
-      if (sb) {
-        const { data, error } = await sb
-          .from("listings")
-          .select("*")
-          .eq("id", pendingSharedZarId)
-          .maybeSingle();
-        if (!error && data) item = normalizeListingRow(data);
-      } else {
-        item = listings.find(l => String(l.id) === String(pendingSharedZarId)) || null;
-      }
-
-      if (!item) {
-        body.innerHTML = `
-          <div class="text-center py-6 space-y-3">
-            <div class="text-3xl">📭</div>
-            <h3 class="text-base font-bold text-gray-900">Энэ зар олдсонгүй</h3>
-            <p class="text-xs text-gray-500">Зар устгагдсан эсвэл хугацаа нь дууссан байж магадгүй.</p>
-            <button type="button" onclick="closeSharedListing()" class="w-full py-2.5 bg-emerald-700 text-white text-sm font-bold rounded-xl cursor-pointer">
-              Нэвтрэх хэсэг рүү очих
-            </button>
-          </div>`;
-      } else {
-        const meta = CATEGORY_META[item.category] || { icon: "🏷️", badge: "bg-emerald-100 text-emerald-800" };
-        body.innerHTML = `
-          <div class="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-gray-100">
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-lg ${meta.badge}">${meta.icon} ${escapeHtml(item.category)}</span>
-            <button type="button" onclick="closeSharedListing()" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 font-bold cursor-pointer">✕</button>
-          </div>
-          ${item.isPinned ? '<span class="inline-block mb-2 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500 text-white">🔥 Яаралтай</span>' : ''}
-          <h3 class="text-base sm:text-lg font-extrabold text-gray-900 leading-snug break-words">${escapeHtml(item.title)}</h3>
-          ${item.description ? `<p class="text-xs sm:text-sm text-gray-600 mt-2 leading-relaxed whitespace-pre-line break-words">${escapeHtml(item.description)}</p>` : ''}
-          <div class="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <span class="font-extrabold text-emerald-700 text-base">${escapeHtml(item.price)}</span>
-              <span class="block text-[11px] text-gray-400">👤 ${escapeHtml(item.authorName || "Хэрэглэгч")} • ${escapeHtml(item.createdAt)}</span>
-            </div>
-            <a href="tel:+976${escapeHtml(item.phone)}"
-              class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-sm transition">
-              📞 ${escapeHtml(item.phone)}
-            </a>
-          </div>
-          <button type="button" onclick="closeSharedListing(false)"
-            class="mt-4 w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold rounded-xl cursor-pointer transition">
-            Нэвтэрч сэтгэгдэл бичих / Бүх зар харах
-          </button>`;
-      }
-
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-      syncBodyScrollLock();
-    }
-
-    function closeSharedListing(clearParam = true) {
-      const modal = document.getElementById("sharedListingModal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-      if (clearParam) {
-        pendingSharedZarId = null;
-        clearSharedUrlParam();
-      }
-      syncBodyScrollLock();
-    }
-
-    // ── Admin Dashboard ──────────────────────────────────────
-    async function openAdminDashboard() {
-      if (!currentUser || !currentUser.isAdmin) return;
-      const m = document.getElementById("adminModal");
-      const body = document.getElementById("adminModalBody");
-      m.classList.remove("hidden");
-      m.classList.add("flex");
-      syncBodyScrollLock();
-
-      body.innerHTML = `
-        <div class="bg-emerald-800 text-white px-3 sm:px-4 py-3 flex items-center justify-between gap-2 shrink-0">
-          <button type="button" onclick="closeAdminDashboard()"
-            class="inline-flex items-center gap-1.5 bg-emerald-900/80 hover:bg-emerald-950 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl cursor-pointer transition">
-            ← Буцах
-          </button>
-          <span class="text-sm sm:text-base font-bold">📊 Админ самбар</span>
-          <div class="w-16"></div>
-        </div>
-        <div class="p-8 text-center text-sm text-gray-500">Мэдээлэл ачаалж байна...</div>
-      `;
-
-      await fetchAdminStats();
-      renderAdminDashboard();
-    }
-
-    function closeAdminDashboard() {
-      const m = document.getElementById("adminModal");
-      if (!m) return;
-      m.classList.add("hidden");
-      m.classList.remove("flex");
-      syncBodyScrollLock();
-    }
-
-    async function fetchAdminStats() {
-      if (!currentUser || !currentUser.isAdmin) return;
-      if (sb) {
-        const { data, error } = await sb.rpc("get_admin_stats", { p_admin_id: currentUser.id });
-        if (error) {
-          adminStatsCache = { error: error.message };
-          return;
-        }
-        adminStatsCache = data;
-      } else {
-        const now = Date.now();
-        const activeListings = listings.filter(l => !isExpired(l.expiresAt)).length;
-        adminStatsCache = {
-          total_users: users.length,
-          new_users_24h: users.filter(u => u.createdAt && (now - new Date(u.createdAt).getTime()) < 86400000).length,
-          new_users_7d: users.filter(u => u.createdAt && (now - new Date(u.createdAt).getTime()) < 7 * 86400000).length,
-          total_listings: listings.length,
-          active_listings: activeListings,
-          total_comments: comments.length,
-          total_reactions: reactions.length,
-          users: [...users].reverse()
-        };
-      }
-    }
-
-    function renderAdminDashboard(searchQuery = "") {
-      const body = document.getElementById("adminModalBody");
-      if (!body || !currentUser || !currentUser.isAdmin) return;
-
-      if (!adminStatsCache || adminStatsCache.error) {
-        body.innerHTML = `
-          <div class="bg-emerald-800 text-white px-3 sm:px-4 py-3 flex items-center justify-between gap-2 shrink-0">
-            <button type="button" onclick="closeAdminDashboard()"
-              class="inline-flex items-center gap-1.5 bg-emerald-900/80 hover:bg-emerald-950 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl cursor-pointer transition">
-              ← Буцах
-            </button>
-            <span class="text-sm sm:text-base font-bold">📊 Админ самбар</span>
-            <div class="w-16"></div>
-          </div>
-          <div class="p-6 text-center space-y-2">
-            <p class="text-sm font-semibold text-red-600">Алдаа: ${escapeHtml(adminStatsCache?.error || "Мэдээлэл олдсонгүй")}</p>
-            <p class="text-xs text-gray-500">Supabase дээр <code>get_admin_stats</code> SQL функцээ ажиллуулсан эсэхээ шалгана уу.</p>
-          </div>`;
-        return;
-      }
-
-      const s = adminStatsCache;
-      const allUsers = Array.isArray(s.users) ? s.users : [];
-      const q = searchQuery.trim().toLowerCase();
-      const filteredUsers = q
-        ? allUsers.filter(u => (u.name || "").toLowerCase().includes(q) || (u.phone || "").toLowerCase().includes(q))
-        : allUsers;
-
-      body.innerHTML = `
-        <div class="bg-emerald-800 text-white px-3 sm:px-4 py-3 flex items-center justify-between gap-2 shrink-0">
-          <button type="button" onclick="closeAdminDashboard()"
-            class="inline-flex items-center gap-1.5 bg-emerald-900/80 hover:bg-emerald-950 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl cursor-pointer transition">
-            ← Буцах
-          </button>
-          <span class="text-sm sm:text-base font-bold truncate">📊 Админ самбар</span>
-          <button type="button" onclick="openAdminDashboard()"
-            class="inline-flex items-center gap-1 bg-emerald-900/80 hover:bg-emerald-950 text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl cursor-pointer transition">
-            ↻ Шинэчлэх
-          </button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-4 bg-white">
-          <!-- Гол тоон үзүүлэлтүүд -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-100">
-              <div class="text-[11px] font-semibold text-emerald-700">👥 Нийт хэрэглэгч</div>
-              <div class="text-xl sm:text-2xl font-extrabold text-emerald-900 mt-0.5">${s.total_users ?? 0}</div>
-              <div class="text-[10px] text-emerald-600 mt-0.5">+${s.new_users_24h ?? 0} өнөөдөр • +${s.new_users_7d ?? 0} (7 хоног)</div>
-            </div>
-            <div class="p-3 rounded-2xl bg-sky-50 border border-sky-100">
-              <div class="text-[11px] font-semibold text-sky-700">📋 Нийт зар</div>
-              <div class="text-xl sm:text-2xl font-extrabold text-sky-900 mt-0.5">${s.total_listings ?? 0}</div>
-              <div class="text-[10px] text-sky-600 mt-0.5">${s.active_listings ?? 0} идэвхтэй</div>
-            </div>
-            <div class="p-3 rounded-2xl bg-violet-50 border border-violet-100">
-              <div class="text-[11px] font-semibold text-violet-700">💬 Сэтгэгдэл</div>
-              <div class="text-xl sm:text-2xl font-extrabold text-violet-900 mt-0.5">${s.total_comments ?? 0}</div>
-            </div>
-            <div class="p-3 rounded-2xl bg-amber-50 border border-amber-100">
-              <div class="text-[11px] font-semibold text-amber-700">👍 Reaction</div>
-              <div class="text-xl sm:text-2xl font-extrabold text-amber-900 mt-0.5">${s.total_reactions ?? 0}</div>
-            </div>
-          </div>
-
-          <!-- Хэрэглэгч хайх -->
-          <div class="space-y-2.5">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <h4 class="text-xs font-bold uppercase tracking-wide text-gray-500">
-                Бүртгэлтэй хэрэглэгчид (${filteredUsers.length})
-              </h4>
-              <input type="text" value="${escapeHtml(searchQuery)}" oninput="renderAdminDashboard(this.value)"
-                placeholder="Нэр эсвэл утас хайх..."
-                class="w-full sm:w-56 border border-gray-300 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600">
-            </div>
-
-            ${filteredUsers.length === 0
-              ? `<div class="text-center py-8 bg-gray-50 rounded-2xl text-xs text-gray-400">Тохирох хэрэглэгч олдсонгүй.</div>`
-              : `<div class="space-y-2">
-                   ${filteredUsers.map((u, idx) => {
-                     const userListingCount = listings.filter(l => l.authorId === u.id).length;
-                     const joinedText = u.created_at ? formatTimeAgo(u.created_at) : (u.createdAt ? formatTimeAgo(u.createdAt) : "");
-                     return `
-                       <div class="p-3 rounded-xl bg-gray-50 border border-gray-200/80 flex items-center justify-between gap-2">
-                         <div class="flex items-center gap-2.5 min-w-0">
-                           <span class="w-7 h-7 rounded-lg bg-emerald-700 text-white text-xs font-bold flex items-center justify-center shrink-0">
-                             ${idx + 1}
-                           </span>
-                           <div class="min-w-0">
-                             <div class="flex items-center gap-1.5 flex-wrap">
-                               <span class="text-xs sm:text-sm font-bold text-gray-900 truncate">${escapeHtml(u.name)}</span>
-                               ${u.is_admin || u.isAdmin ? '<span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-amber-400 text-gray-900">Админ</span>' : ''}
-                             </div>
-                             <div class="text-[11px] text-gray-500 flex items-center gap-2 flex-wrap">
-                               <span>📞 ${escapeHtml(u.phone)}</span>
-                               ${joinedText ? `<span>• 🕒 ${escapeHtml(joinedText)}</span>` : ''}
-                               <span>• 📋 ${userListingCount} зар</span>
-                             </div>
-                           </div>
-                         </div>
-                         <button type="button" onclick="closeAdminDashboard(); openProfile(${u.id}, '${escapeHtml(u.name).replace(/'/g, "\\'")}');"
-                           class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-emerald-50 border border-gray-200 text-emerald-700 text-[11px] font-semibold cursor-pointer whitespace-nowrap transition">
-                           Профайл →
-                         </button>
-                       </div>`;
-                   }).join("")}
-                 </div>`
-            }
-          </div>
-        </div>
-      `;
-    }
-
-    document.addEventListener("keydown", e => {
-      if (e.key === "Escape") { closeModal(); closeSettings(); closeComments(); closeProfile(); closeSharedListing(); closeAdminDashboard(); }
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════ -->
+<script>
+// ═══════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════
+const AVATARS = ['🦁','🐯','🦊','🐺','🐻','🐼','🐨','🐸','🦋','🦄','🐬','🦅','🐉','🤖','👾','🐙','🦑','🐥','🦉','🦚','🐓','🕊️','🐇','🦝','🦨','🦡','🐥','🐧'];
+const COLORS  = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899'];
+const MEDALS  = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
+const ANS_LBL = ['A','B','C','D'];
+
+// ═══════════════════════════════
+// GLOBAL STATE
+// ═══════════════════════════════
+let db = null, auth = null;
+let currentUser = null;
+let sessionId   = null;
+let studentId   = null;
+let myAvatar    = AVATARS[0];
+let myColor     = COLORS[0];
+let editSetId   = null;
+let qCount      = 10;
+let editQs      = [];          // questions being built in editor
+let currentSession = null;
+let answered    = false;
+let myScore     = 0;
+let lastQIdx    = -1;
+let timerIv     = null;
+// listeners
+let sessRef  = null, sessCb  = null;
+let lobRef   = null, lobCb   = null;
+
+// ═══════════════════════════════
+// FIREBASE SETUP
+// ═══════════════════════════════
+function setupFirebase() {
+  const raw = document.getElementById('fbConfig').value.trim();
+  try {
+    const cfg = JSON.parse(raw);
+    if (!cfg.apiKey)      throw new Error('apiKey байхгүй');
+    if (!cfg.databaseURL) throw new Error('databaseURL байхгүй — Realtime Database идэвхжүүлснийхаа дараа шинэчил');
+    localStorage.setItem('fb-cfg', JSON.stringify(cfg));
+    initFB(cfg);
+  } catch(e) { alert('⚠️ Алдаа: ' + e.message); }
+}
+
+function initFB(cfg) {
+  if (!firebase.apps.length) firebase.initializeApp(cfg);
+  db   = firebase.database();
+  auth = firebase.auth();
+  auth.onAuthStateChanged(u => {
+    currentUser = u;
+    if (u && !sessionId) { loadDashboard(); showView('v-dashboard'); }
+    else if (!u && !sessionId) showView('v-landing');
+  });
+}
+
+// ═══════════════════════════════
+// INIT
+// ═══════════════════════════════
+function init() {
+  const p = new URLSearchParams(location.search);
+  const jid = p.get('join');
+  const cfg64 = p.get('cfg');
+
+  if (jid && cfg64) {
+    // === STUDENT path ===
+    try {
+      const cfg = JSON.parse(atob(decodeURIComponent(cfg64)));
+      initFB(cfg);
+      sessionId = jid;
+      studentId = sessionStorage.getItem('sid') || null;
+      if (studentId) rejoinAsStudent();
+      else { buildJoinView(); showView('v-sjoin'); }
+    } catch(e) { alert('QR алдаатай'); showView('v-landing'); }
+    return;
+  }
+
+  // === TEACHER path ===
+  const saved = localStorage.getItem('fb-cfg');
+  if (!saved) { showView('v-setup'); return; }
+  try { initFB(JSON.parse(saved)); showView('v-landing'); }
+  catch(e)  { showView('v-setup'); }
+}
+
+// ═══════════════════════════════
+// VIEW
+// ═══════════════════════════════
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function switchTab(t) {
+  ['login','reg'].forEach(x => {
+    document.getElementById('auth-'+x).style.display = x===t ? '' : 'none';
+    document.getElementById('tab-'+x).classList.toggle('active', x===t);
+  });
+  document.getElementById('auth-err').style.display='none';
+}
+
+// ═══════════════════════════════
+// TOAST
+// ═══════════════════════════════
+function toast(msg, col='#22c55e') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.background = col;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ═══════════════════════════════
+// TEACHER AUTH
+// ═══════════════════════════════
+async function doRegister() {
+  const name = v('r-name'), email = v('r-email'), pass = v('r-pass');
+  const err = ge('auth-err');
+  if (!name||!email||!pass) { showErr(err,'Бүх талбарыг бөглөнэ үү'); return; }
+  try {
+    err.style.display='none';
+    const c = await auth.createUserWithEmailAndPassword(email, pass);
+    await db.ref(`teachers/${c.user.uid}`).set({ name, email, at: Date.now() });
+    toast('Бүртгэл амжилттай! 🎉');
+  } catch(e) { showErr(err, fbErr(e)); }
+}
+
+async function doLogin() {
+  const email = v('l-email'), pass = v('l-pass');
+  const err = ge('auth-err');
+  if (!email||!pass) { showErr(err,'И-мэйл болон нууц үгийг бөглөнэ үү'); return; }
+  try {
+    err.style.display='none';
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch(e) { showErr(err, fbErr(e)); }
+}
+
+async function doLogout() {
+  clearAll();
+  await auth.signOut();
+  showView('v-landing');
+}
+
+function fbErr(e) {
+  const m = {
+    'auth/user-not-found':'И-мэйл бүртгэлгүй',
+    'auth/wrong-password':'Нууц үг буруу',
+    'auth/invalid-credential':'И-мэйл эсвэл нууц үг буруу',
+    'auth/email-already-in-use':'И-мэйл аль хэдийн бүртгэлтэй',
+    'auth/weak-password':'Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой',
+    'auth/invalid-email':'И-мэйл буруу форматтай',
+  };
+  return m[e.code] || e.message;
+}
+
+// ═══════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════
+async function loadDashboard() {
+  if (!currentUser) return;
+  const tSnap = await db.ref(`teachers/${currentUser.uid}/name`).get();
+  ge('dash-welcome').textContent = `Сайн байна уу, ${tSnap.val()||'багш'} 👋`;
+
+  const snap = await db.ref(`teachers/${currentUser.uid}/sets`).get();
+  const sets = snap.val() || {};
+  const list = ge('set-list');
+  const entries = Object.entries(sets).sort((a,b)=>b[1].at-a[1].at);
+
+  if (!entries.length) {
+    list.innerHTML = '<p class="muted center" style="padding:32px 0">Одоогоор багц байхгүй. «Шинэ багц» дарж нэмнэ үү!</p>';
+    return;
+  }
+  list.innerHTML = entries.map(([id,s])=>`
+    <div class="lb-row" style="margin-bottom:8px">
+      <div class="lb-info">
+        <div class="lb-name">${esc(s.title)}</div>
+        <div class="lb-sub">${s.count} асуулт · ${new Date(s.at).toLocaleDateString('mn-MN')}</div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-sm" onclick="openEditor('${id}')">✏️</button>
+        <button class="btn btn-primary btn-sm" onclick="startSession('${id}')">▶️ Уралдаан</button>
+        <button class="btn btn-danger btn-sm" onclick="delSet('${id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function goToDash() { clearAll(); loadDashboard(); showView('v-dashboard'); }
+
+async function delSet(id) {
+  if (!confirm('Устгах уу?')) return;
+  await db.ref(`teachers/${currentUser.uid}/sets/${id}`).remove();
+  loadDashboard(); toast('Устгасан','#ef4444');
+}
+
+// ═══════════════════════════════
+// EDITOR
+// ═══════════════════════════════
+function openEditor(setId) {
+  editSetId = setId; editQs = []; qCount = 10;
+  ge('set-title').value = '';
+  if (setId) {
+    db.ref(`teachers/${currentUser.uid}/sets/${setId}`).get().then(snap=>{
+      const s = snap.val(); if (!s) return;
+      ge('set-title').value = s.title;
+      qCount = s.count;
+      editQs = JSON.parse(JSON.stringify(s.questions || []));
+      setQCount(qCount, true);
     });
+  } else { setQCount(10, true); }
+  showView('v-editor');
+}
 
-    applyTheme(localStorage.getItem(THEME_KEY) || "light");
-    updateAppView();
-    loadSharedListingForGuest();
-  </script>
+function setQCount(n, skipTrim) {
+  qCount = n;
+  [10,15,20,25].forEach(c => {
+    const b = ge('cnt-'+c);
+    b.className = c===n ? 'btn btn-primary' : 'btn';
+  });
+  while (editQs.length < n) editQs.push({ text:'', options:['','','',''], correct:0 });
+  if (!skipTrim) editQs = editQs.slice(0,n);
+  renderEditor();
+}
+
+function renderEditor() {
+  ge('q-editor-list').innerHTML = editQs.slice(0,qCount).map((q,i)=>`
+    <div class="qe-card">
+      <div class="qe-num">${i+1}-р асуулт</div>
+      <label>Асуулт</label>
+      <input value="${esc(q.text)}" placeholder="Асуулт бич..." oninput="editQs[${i}].text=this.value">
+      <label style="margin-bottom:8px">Хариултууд — зөвийг зүүн талын тойрог дарж заана</label>
+      ${['A','B','C','D'].map((lbl,j)=>`
+        <div class="opt-row">
+          <input type="radio" name="cor${i}" value="${j}" ${q.correct===j?'checked':''} onchange="editQs[${i}].correct=${j}">
+          <span class="opt-lbl" style="color:${['#fca5a5','#93c5fd','#86efac','#fde68a'][j]}">${lbl}</span>
+          <input value="${esc(q.options[j]||'')}" placeholder="Хариулт ${lbl}..." oninput="editQs[${i}].options[${j}]=this.value" style="margin:0">
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+async function saveSet() {
+  const title = v('set-title');
+  if (!title) { alert('Багцийн нэрийг бичнэ үү'); return; }
+  for (let i=0;i<qCount;i++) {
+    const q = editQs[i];
+    if (!q.text.trim()) { alert(`${i+1}-р асуулт хоосон байна`); return; }
+    if (q.options.some(o=>!o.trim())) { alert(`${i+1}-р асуултын бүх хариулт (A,B,C,D) бичнэ үү`); return; }
+  }
+  const id = editSetId || db.ref().push().key;
+  await db.ref(`teachers/${currentUser.uid}/sets/${id}`).set({
+    title, count: qCount, at: Date.now(),
+    questions: editQs.slice(0,qCount)
+  });
+  editSetId = id;
+  toast('Хадгалагдлаа ✅');
+  setTimeout(()=>{ loadDashboard(); showView('v-dashboard'); }, 500);
+}
+
+// ═══════════════════════════════
+// SESSION
+// ═══════════════════════════════
+async function startSession(setId) {
+  const setSnap = await db.ref(`teachers/${currentUser.uid}/sets/${setId}`).get();
+  const set = setSnap.val();
+  if (!set) { alert('Багц олдсонгүй'); return; }
+  const tNameSnap = await db.ref(`teachers/${currentUser.uid}/name`).get();
+
+  sessionId = db.ref('sessions').push().key;
+  await db.ref(`sessions/${sessionId}`).set({
+    tid: currentUser.uid,
+    tname: tNameSnap.val()||'Багш',
+    status: 'lobby',
+    cq: -1,
+    qst: 0,         // question start time
+    total: set.count,
+    questions: set.questions,
+    students: {},
+    answers: {},
+    at: Date.now()
+  });
+  openLobby();
+}
+
+function openLobby() {
+  // Build QR
+  ge('qr-box').innerHTML = '';
+  const cfg = localStorage.getItem('fb-cfg');
+  const b64 = btoa(unescape(encodeURIComponent(cfg)));
+  const url  = `${location.origin}${location.pathname}?join=${sessionId}&cfg=${encodeURIComponent(b64)}`;
+  ge('join-url-txt').textContent = url;
+  try {
+    new QRCode(ge('qr-box'),{ text:url, width:200, height:200,
+      colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.L });
+  } catch(e) {}
+
+  // Watch students
+  clearLob();
+  lobRef = db.ref(`sessions/${sessionId}/students`);
+  lobCb  = snap => {
+    const sts = snap.val()||{};
+    const cnt = Object.keys(sts).length;
+    ge('s-count-badge').textContent = `${cnt} / 40 суралцагч`;
+    ge('start-btn').disabled = cnt===0;
+    ge('start-hint').textContent = cnt===0
+      ? 'Дор хаяж 1 суралцагч нэвтэрсний дараа эхлүүлж болно'
+      : `${cnt} суралцагч бэлэн — эхлүүлж болно`;
+    ge('lobby-empty').style.display = cnt?'none':'';
+    ge('lobby-students').innerHTML = Object.values(sts).map(s=>`
+      <div class="s-chip" style="border-color:${s.color};color:${s.color}">${s.avatar} ${esc(s.name)}</div>
+    `).join('');
+  };
+  lobRef.on('value', lobCb);
+  showView('v-lobby');
+}
+
+function closeLobby() {
+  if (!confirm('Уралдааныг цуцлах уу?')) return;
+  db.ref(`sessions/${sessionId}/status`).set('cancelled');
+  clearAll(); sessionId=null; loadDashboard(); showView('v-dashboard');
+}
+
+async function startGame() {
+  clearLob();
+  await db.ref(`sessions/${sessionId}`).update({ status:'playing', cq:0, qst:Date.now() });
+  watchTeacherSession();
+  showView('v-tgame');
+}
+
+// ═══════════════════════════════
+// TEACHER GAME
+// ═══════════════════════════════
+let tLastQ = -1;
+
+function watchTeacherSession() {
+  clearSess();
+  sessRef = db.ref(`sessions/${sessionId}`);
+  sessCb  = snap => {
+    const s = snap.val(); if (!s) return;
+    currentSession = s;
+    if (s.status==='finished') { clearTimers(); renderTResults(s); showView('v-tresults'); return; }
+    if (s.status!=='playing') return;
+    renderTGame(s);
+    if (s.cq !== tLastQ) { tLastQ=s.cq; startTTimer(s.qst); }
+  };
+  sessRef.on('value', sessCb);
+}
+
+function renderTGame(s) {
+  const qi = s.cq, q = s.questions[qi], total=s.total;
+  const sts = s.students||{}, ans=(s.answers&&s.answers[qi])||{};
+  const nSt = Object.keys(sts).length, nAns = Object.keys(ans).length;
+
+  ge('tg-qlabel').textContent  = `${qi+1} / ${total} асуулт`;
+  ge('tg-qlabel2').textContent = `${qi+1}-р асуулт`;
+  ge('tg-qtext').textContent   = q.text;
+  ge('tg-prog').style.width    = `${(qi+1)/total*100}%`;
+  ge('tg-answered').textContent= `${nAns} / ${nSt} хариулсан`;
+
+  ge('tg-options').innerHTML = q.options.map((opt,i)=>`
+    <div class="ans-btn ans-${ANS_LBL[i]} ${i===q.correct?'teacher-correct':''}" style="pointer-events:none">
+      <span class="lbl">${ANS_LBL[i]}</span> ${esc(opt)}
+    </div>
+  `).join('');
+
+  let cor=0,wr=0;
+  Object.values(ans).forEach(a=>a.correct?cor++:wr++);
+  ge('tg-ncorrect').textContent = cor;
+  ge('tg-nwrong').textContent   = wr;
+  ge('tg-nnone').textContent    = nSt - nAns;
+
+  // Mini leaderboard top 5
+  const ranked = Object.entries(sts).map(([id,s])=>({...s,id})).sort((a,b)=>b.score-a.score).slice(0,5);
+  ge('tg-mini-lb').innerHTML = ranked.map((s,i)=>`
+    <div class="lb-row">
+      <div class="lb-rank">${MEDALS[i]||(i+1)}</div>
+      <div class="lb-avatar">${s.avatar}</div>
+      <div class="lb-info"><div class="lb-name" style="color:${s.color}">${esc(s.name)}</div></div>
+      <div class="lb-pts">${s.score}</div>
+    </div>
+  `).join('') || '<p class="muted center">Бүртгэлгүй</p>';
+}
+
+function startTTimer(qst) {
+  clearTimers();
+  const circ = 238.8, ring=ge('tg-ring'), tn=ge('tg-time');
+  timerIv = setInterval(()=>{
+    const left = Math.max(0, 60-(Date.now()-qst)/1000);
+    const r = Math.ceil(left);
+    tn.textContent = r;
+    ring.style.strokeDashoffset = circ*(1-left/60);
+    const col = left>30?'#22c55e':left>15?'#f59e0b':'#ef4444';
+    ring.style.stroke = col; tn.style.color = col;
+    if (left<=0) clearTimers();
+  },120);
+}
+
+async function nextQuestion() {
+  if (!currentSession) return;
+  const nxt = currentSession.cq+1;
+  if (nxt >= currentSession.total) {
+    await db.ref(`sessions/${sessionId}/status`).set('finished');
+  } else {
+    await db.ref(`sessions/${sessionId}`).update({ cq:nxt, qst:Date.now(), status:'playing' });
+  }
+}
+
+function renderTResults(s) {
+  const sts = s.students||{};
+  const ranked = Object.entries(sts).map(([id,x])=>({...x,id})).sort((a,b)=>b.score-a.score);
+  ge('t-final-lb').innerHTML = ranked.length ? ranked.map((x,i)=>`
+    <div class="lb-row">
+      <div class="lb-rank">${MEDALS[i]||(i+1)}</div>
+      <div class="lb-avatar">${x.avatar}</div>
+      <div class="lb-info">
+        <div class="lb-name" style="color:${x.color}">${esc(x.name)}</div>
+        <div class="lb-sub">Нийт ${x.score} оноо</div>
+      </div>
+      <div class="lb-pts">${x.score}</div>
+    </div>
+  `).join('') : '<p class="muted center">Оролцогч байхгүй байна</p>';
+}
+
+// ═══════════════════════════════
+// STUDENT JOIN
+// ═══════════════════════════════
+function buildJoinView() {
+  // Avatars
+  ge('av-grid').innerHTML = AVATARS.map((a,i)=>`
+    <span class="av-opt ${i===0?'sel':''}" onclick="pickAv(this,'${a}')">${a}</span>
+  `).join('');
+  myAvatar = AVATARS[0];
+  // Colors
+  ge('col-grid').innerHTML = COLORS.map((c,i)=>`
+    <div class="col-opt ${i===0?'sel':''}" style="background:${c}" onclick="pickCol(this,'${c}')"></div>
+  `).join('');
+  myColor = COLORS[0];
+}
+
+function pickAv(el,a){ document.querySelectorAll('.av-opt').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); myAvatar=a; }
+function pickCol(el,c){ document.querySelectorAll('.col-opt').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); myColor=c; }
+
+async function studentJoin() {
+  const name = v('s-name');
+  const err  = ge('sjoin-err');
+  if (!name) { showErr(err,'Нэрээ бичнэ үү'); return; }
+  err.style.display='none';
+
+  const snap = await db.ref(`sessions/${sessionId}`).get();
+  const s = snap.val();
+  if (!s) { showErr(err,'Уралдаан олдсонгүй'); return; }
+  if (s.status==='finished'||s.status==='cancelled') { showErr(err,'Уралдаан дууссан байна'); return; }
+
+  const sts = s.students||{};
+  if (Object.keys(sts).length >= 40) { showErr(err,'Уралдаанд 40 хүн дүүрсэн!'); return; }
+
+  studentId = `s${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}`;
+  sessionStorage.setItem('sid', studentId);
+
+  await db.ref(`sessions/${sessionId}/students/${studentId}`).set({
+    name, avatar:myAvatar, color:myColor, score:0, at:Date.now()
+  });
+
+  myScore = 0; lastQIdx = -1; answered = false;
+  ge('sw-avatar').textContent = myAvatar;
+  ge('sw-name').textContent   = name;
+  watchStudentSession();
+  showView('v-swait');
+}
+
+// ═══════════════════════════════
+// STUDENT GAME
+// ═══════════════════════════════
+function watchStudentSession() {
+  clearSess();
+  sessRef = db.ref(`sessions/${sessionId}`);
+  sessCb  = snap => {
+    const s = snap.val(); if (!s) return;
+    currentSession = s;
+
+    // Update waiting room count
+    const cnt = Object.keys(s.students||{}).length;
+    const swc = ge('sw-cnt'); if(swc) swc.textContent = `${cnt} суралцагч нэгдсэн`;
+
+    if (s.status==='playing') { renderStudentGame(s); showView('v-sgame'); }
+    else if (s.status==='finished') { clearTimers(); renderStudentResults(s); showView('v-sresults'); }
+  };
+  sessRef.on('value', sessCb);
+}
+
+function renderStudentGame(s) {
+  const qi = s.cq, q = s.questions[qi];
+
+  ge('sg-qnum').textContent   = `${qi+1} / ${s.total}`;
+  ge('sg-score').textContent  = `${myScore} оноо`;
+  ge('sg-qlabel').textContent = `${qi+1}-р асуулт`;
+  ge('sg-qtext').textContent  = q.text;
+
+  if (qi !== lastQIdx) {
+    lastQIdx = qi;
+    answered = false;
+    ge('sg-feedback').style.display='none';
+    ge('sg-q-box').style.display='';
+    ge('sg-options').innerHTML = q.options.map((opt,i)=>`
+      <button class="ans-btn ans-${ANS_LBL[i]}" onclick="submitAns(${i})">
+        <span class="lbl">${ANS_LBL[i]}</span> ${esc(opt)}
+      </button>
+    `).join('');
+    startSTimer(s.qst);
+  }
+}
+
+function startSTimer(qst) {
+  clearTimers();
+  const circ=289.0, ring=ge('sg-ring'), tn=ge('sg-time');
+  timerIv = setInterval(()=>{
+    const left=Math.max(0,60-(Date.now()-qst)/1000);
+    const r=Math.ceil(left);
+    tn.textContent=r;
+    ring.style.strokeDashoffset=circ*(1-left/60);
+    const col=left>30?'#22c55e':left>15?'#f59e0b':'#ef4444';
+    ring.style.stroke=col; tn.style.color=col;
+    if(left<=0&&!answered){ clearTimers(); showTimeUp(); }
+  },120);
+}
+
+async function submitAns(ai) {
+  if (answered||!currentSession) return;
+  answered=true; clearTimers();
+
+  const qi=currentSession.cq, q=currentSession.questions[qi];
+  const left=Math.max(0,Math.round(60-(Date.now()-currentSession.qst)/1000));
+  const correct=ai===q.correct;
+  const pts=correct?left:0;
+
+  // Highlight buttons
+  document.querySelectorAll('.ans-btn').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===q.correct) b.classList.add('correct');
+    else if(i===ai&&!correct) b.classList.add('wrong');
+    else b.classList.add('dimmed');
+  });
+
+  // Feedback card
+  ge('sf-icon').textContent   = correct?'✅':'❌';
+  ge('sf-title').textContent  = correct?'Зөв хариулт!':'Буруу хариулт';
+  ge('sf-pts').textContent    = correct?`+${pts} оноо`:'0 оноо';
+  ge('sf-correct').textContent= `Зөв хариулт: ${ANS_LBL[q.correct]}. ${q.options[q.correct]}`;
+  ge('sg-feedback').style.display='';
+
+  // Save to Firebase
+  await db.ref(`sessions/${sessionId}/answers/${qi}/${studentId}`).set({
+    answer:ai, correct, points:pts, time:Date.now()
+  });
+  if (correct) {
+    myScore += pts;
+    await db.ref(`sessions/${sessionId}/students/${studentId}/score`).transaction(x=>(x||0)+pts);
+  }
+  ge('sg-score').textContent = `${myScore} оноо`;
+}
+
+function showTimeUp() {
+  if(answered) return;
+  answered=true;
+  if(!currentSession) return;
+  const q=currentSession.questions[currentSession.cq];
+  document.querySelectorAll('.ans-btn').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===q.correct) b.classList.add('correct');
+    else b.classList.add('dimmed');
+  });
+  ge('sf-icon').textContent  ='⏰';
+  ge('sf-title').textContent ='Хугацаа дууслаа!';
+  ge('sf-pts').textContent   ='0 оноо';
+  ge('sf-correct').textContent=`Зөв хариулт: ${ANS_LBL[q.correct]}. ${q.options[q.correct]}`;
+  ge('sg-feedback').style.display='';
+  // Save miss
+  const qi=currentSession.cq;
+  db.ref(`sessions/${sessionId}/answers/${qi}/${studentId}`).set({
+    answer:-1, correct:false, points:0, time:Date.now()
+  });
+}
+
+// ═══════════════════════════════
+// STUDENT RESULTS
+// ═══════════════════════════════
+function renderStudentResults(s) {
+  const sts=s.students||{};
+  const me=sts[studentId]||{};
+  const ranked=Object.entries(sts).map(([id,x])=>({...x,id})).sort((a,b)=>b.score-a.score);
+  const myRank=ranked.findIndex(x=>x.id===studentId)+1;
+
+  ge('sr-avatar').textContent=me.avatar||'🏆';
+  ge('sr-name').textContent  =me.name||'';
+  ge('sr-score').textContent =me.score||0;
+
+  const rEl=ge('sr-rank');
+  rEl.textContent=`${MEDALS[myRank-1]||(myRank+'р')} ${myRank}-р байр`;
+  rEl.className=`badge ${myRank===1?'badge-gold':myRank<=3?'badge-green':'badge-blue'}`;
+
+  ge('sr-lb').innerHTML=ranked.map((x,i)=>`
+    <div class="lb-row ${x.id===studentId?'me':''}">
+      <div class="lb-rank">${MEDALS[i]||(i+1)}</div>
+      <div class="lb-avatar">${x.avatar}</div>
+      <div class="lb-info">
+        <div class="lb-name" style="color:${x.color}">${esc(x.name)}${x.id===studentId?' 👈':''}
+        </div>
+      </div>
+      <div class="lb-pts">${x.score}</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════
+// REJOIN
+// ═══════════════════════════════
+async function rejoinAsStudent() {
+  const snap=await db.ref(`sessions/${sessionId}`).get();
+  const s=snap.val();
+  if (!s) { buildJoinView(); showView('v-sjoin'); return; }
+  const me=(s.students||{})[studentId];
+  if (!me) { buildJoinView(); showView('v-sjoin'); return; }
+
+  myScore=me.score||0; lastQIdx=-1; answered=false;
+  currentSession=s;
+
+  if (s.status==='lobby') {
+    ge('sw-avatar').textContent=me.avatar;
+    ge('sw-name').textContent  =me.name;
+    watchStudentSession(); showView('v-swait');
+  } else if (s.status==='playing') {
+    // Check if already answered this question
+    const qi=s.cq;
+    const myAns=(s.answers&&s.answers[qi]&&s.answers[qi][studentId]);
+    if (myAns) { answered=true; lastQIdx=qi; }
+    watchStudentSession(); renderStudentGame(s); showView('v-sgame');
+  } else if (s.status==='finished') {
+    renderStudentResults(s); showView('v-sresults');
+  } else {
+    buildJoinView(); showView('v-sjoin');
+  }
+}
+
+// ═══════════════════════════════
+// CLEANUP
+// ═══════════════════════════════
+function clearTimers() { if(timerIv){clearInterval(timerIv);timerIv=null;} }
+function clearSess()   { if(sessRef&&sessCb){sessRef.off('value',sessCb);sessRef=null;sessCb=null;} }
+function clearLob()    { if(lobRef&&lobCb){lobRef.off('value',lobCb);lobRef=null;lobCb=null;} }
+function clearAll()    { clearTimers();clearSess();clearLob(); }
+
+// ═══════════════════════════════
+// UTILS
+// ═══════════════════════════════
+function ge(id)  { return document.getElementById(id); }
+function v(id)   { return ge(id).value.trim(); }
+function showErr(el,msg){ el.textContent=msg; el.style.display='block'; }
+function esc(s)  {
+  return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ═══════════════════════════════
+// START
+// ═══════════════════════════════
+init();
+</script>
 </body>
 </html>
