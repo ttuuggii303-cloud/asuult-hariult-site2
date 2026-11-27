@@ -1374,52 +1374,59 @@ function buildFactMCQs(facts, askTemplate, allPool) {
 function buildTopicBank(topicId) {
   const out = [];
   const seen = new Set();
-  const add = (q) => {
+  const semSeen = new Set();
+  const add = (q, semKey) => {
     if (!q || !q.text) return;
     const k = q.text.trim().toLowerCase();
     if (seen.has(k)) return;
+    if (semKey && semSeen.has(semKey)) return;
     seen.add(k);
+    if (semKey) semSeen.add(semKey);
     out.push(q);
   };
   const rInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-  // ── MATH TOPICS (45+ unique guaranteed via Set loop) ──
+  // ── MATH TOPICS (42+ unique guaranteed via text + semantic Set) ──
   if (topicId === 'm_add_sub') {
     let guard = 0;
-    while (out.length < 44 && guard < 500) {
+    while (out.length < 44 && guard < 800) {
       guard++;
       const mode = guard % 4;
       if (mode === 0) {
         const a = rInt(12, 85), b = rInt(11, 79), ans = a + b;
-        add(makeQ(`${a} + ${b} = ?`, ans, [ans+10, ans-10, ans+1, ans-2]));
+        const sk = `+:${Math.min(a,b)},${Math.max(a,b)}`;
+        add(makeQ(`${a} + ${b} = ?`, ans, [ans+10, ans-10, ans+1, ans-2]), sk);
       } else if (mode === 1) {
         const a = rInt(45, 190), b = rInt(12, a - 5), ans = a - b;
-        add(makeQ(`${a} − ${b} = ?`, ans, [ans+10, Math.abs(ans-10), ans+2, ans+1]));
+        add(makeQ(`${a} − ${b} = ?`, ans, [ans+10, Math.abs(ans-10), ans+2, ans+1]), `-:${a},${b}`);
       } else if (mode === 2) {
         const x = rInt(15, 75), b = rInt(12, 60), c = x + b;
-        add(makeQ(`□ + ${b} = ${c} бол □ нь хэд вэ?`, x, [x+10, Math.max(1,x-10), x+2, c+b]));
+        add(makeQ(`□ + ${b} = ${c} бол □ нь хэд вэ?`, x, [x+10, Math.max(1,x-10), x+2, c+b]), `eq:${b},${c}`);
       } else {
         const a = rInt(20, 65), b = rInt(15, 45), ans = a + b;
-        add(makeQ(`Ангид ${a} ном байсан ба дахин ${b} ном нэмэв. Нийт хэдэн ном болсон бэ?`, ans, [ans-10, ans+10, Math.abs(a-b), ans+5]));
+        const sk = `+:${Math.min(a,b)},${Math.max(a,b)}`;
+        const items = ['ном','дэвтэр','үзэг','бөмбөг','мод','цэцэг'];
+        const it = items[guard % items.length];
+        add(makeQ(`Ангид ${a} ${it} байсан ба дахин ${b} ${it} нэмэв. Нийт хэдэн ${it} болсон бэ?`, ans, [ans-10, ans+10, Math.abs(a-b), ans+5]), sk);
       }
     }
   } else if (topicId === 'm_mul_div') {
     let guard = 0;
-    while (out.length < 44 && guard < 500) {
+    while (out.length < 44 && guard < 800) {
       guard++;
       const mode = guard % 4;
       if (mode === 0) {
         const a = rInt(3, 12), b = rInt(3, 12), ans = a * b;
-        add(makeQ(`${a} × ${b} = ?`, ans, [ans+a, Math.max(1,ans-b), ans+2, a+b]));
+        add(makeQ(`${a} × ${b} = ?`, ans, [ans+a, Math.max(1,ans-b), ans+2, a+b]), `*:${Math.min(a,b)},${Math.max(a,b)}`);
       } else if (mode === 1) {
         const b = rInt(2, 12), ans = rInt(3, 15), a = b * ans;
-        add(makeQ(`${a} ÷ ${b} = ?`, ans, [ans+1, Math.max(1,ans-1), ans+2, b]));
+        add(makeQ(`${a} ÷ ${b} = ?`, ans, [ans+1, Math.max(1,ans-1), ans+2, b]), `/:${a},${b}`);
       } else if (mode === 2) {
-        const a = rInt(11, 25), b = rInt(2, 9), ans = a * b;
-        add(makeQ(`${a} × ${b} үржвэрийг ол.`, ans, [ans+b, ans-b, ans+10, ans-10]));
+        const a = rInt(13, 29), b = rInt(3, 9), ans = a * b;
+        add(makeQ(`${a} × ${b} = ?`, ans, [ans+b, ans-b, ans+10, ans-10]), `*:${Math.min(a,b)},${Math.max(a,b)}`);
       } else {
         const b = rInt(4, 9), k = rInt(5, 14), a = b * k;
-        add(makeQ(`${a} ширхэг алим ${b} хайрцагт тэнцүү хуваав. Хайрцаг бүрд хэдэн алим орох вэ?`, k, [k+1, Math.max(1,k-1), k+2, b]));
+        add(makeQ(`${a} ширхэг алим ${b} хайрцагт тэнцүү хуваав. Хайрцаг бүрд хэдэн алим орох вэ?`, k, [k+1, Math.max(1,k-1), k+2, b]), `/:${a},${b}`);
       }
     }
   } else if (topicId === 'm_geom_elem') {
@@ -1434,87 +1441,96 @@ function buildTopicBank(topicId) {
       makeQ('Тэгш өнцөгтийн дотоод өнцөг бүр хэдэн градус вэ?', 90, [60, 180, 45]),
       makeQ('1 хоногт хэдэн цаг байдаг вэ?', 24, [12, 48, 60]),
       makeQ('1 жилд хэдэн сар байдаг вэ?', 12, [10, 24, 365])
-    ].forEach(add);
+    ].forEach(q => add(q));
     let guard = 0;
-    while (out.length < 44 && guard < 400) {
+    while (out.length < 44 && guard < 600) {
       guard++;
       if (guard % 3 === 0) {
         const a = rInt(3, 18), p = 4 * a;
-        add(makeQ(`Тал нь ${a} см байх квадратын периметрийг ол (см).`, p, [a*a, 2*a, p+4, p-4]));
+        add(makeQ(`Тал нь ${a} см байх квадратын периметрийг ол (см).`, p, [a*a, 2*a, p+4, p-4]), `sq:${a}`);
       } else if (guard % 3 === 1) {
-        const a = rInt(4, 15), b = rInt(2, 12), area = a * b;
-        add(makeQ(`Талууд нь ${a} см ба ${b} см тэгш өнцөгтийн талбайг ол (см²).`, area, [2*(a+b), a+b, area+a, Math.max(1,area-b)]));
+        const a = rInt(4, 15), b = rInt(2, 12);
+        if (a === b) continue;
+        const area = a * b;
+        add(makeQ(`Талууд нь ${a} см ба ${b} см тэгш өнцөгтийн талбайг ол (см²).`, area, [2*(a+b), a+b, area+a, Math.max(1,area-b)]), `rect:${Math.min(a,b)},${Math.max(a,b)}`);
       } else {
-        const m = rInt(2, 15);
-        add(makeQ(`${m} м нь хэдэн сантиметр болох вэ?`, m*100, [m*10, m*1000, m*50]));
+        const m = rInt(2, 19);
+        add(makeQ(`${m} м нь хэдэн сантиметр болох вэ?`, m*100, [m*10, m*1000, m*50]), `cm:${m}`);
       }
     }
   } else if (topicId === 'm_frac') {
     let guard = 0;
-    while (out.length < 44 && guard < 500) {
+    while (out.length < 44 && guard < 800) {
       guard++;
       const mode = guard % 4;
       if (mode === 0) {
         const d = rInt(3, 12), a = rInt(1, d-2), b = rInt(1, d-a);
-        add(makeQ(`${a}/${d} + ${b}/${d} = ?`, `${a+b}/${d}`, [`${a+b}/${d*2}`, `${a+b+1}/${d}`, `${Math.max(1,a+b-1)}/${d}`]));
+        add(makeQ(`${a}/${d} + ${b}/${d} = ?`, `${a+b}/${d}`, [`${a+b}/${d*2}`, `${a+b+1}/${d}`, `${Math.max(1,a+b-1)}/${d}`]), `f+:${d},${Math.min(a,b)},${Math.max(a,b)}`);
       } else if (mode === 1) {
-        const d = [2,4,5,10,20,25,50][guard%7], n = rInt(1, d-1);
+        const d = [4,5,10,20,25,50][guard%6], n = rInt(1, d-1);
         const val = Number((n/d).toFixed(2));
-        add(makeQ(`${n}/${d} энгийн бутархайг аравтын бутархайгаар бич.`, val, [Number((val+0.1).toFixed(2)), Number((val+0.25).toFixed(2)), Number(Math.abs(val-0.05).toFixed(2))]));
+        add(makeQ(`${n}/${d} энгийн бутархайг аравтын бутархайгаар бич.`, val, [Number((val+0.1).toFixed(2)), Number((val+0.25).toFixed(2)), Number(Math.abs(val-0.05).toFixed(2))]), `dec:${n}/${d}`);
       } else if (mode === 2) {
         const d = rInt(2, 9), k = rInt(2, 12), num = d * k, n = rInt(1, d-1);
         const ans = n * k;
-        add(makeQ(`${num} тооны ${n}/${d} хэсгийг ол.`, ans, [ans+k, Math.max(1,ans-k), num-ans, ans+n]));
+        add(makeQ(`${num} тооны ${n}/${d} хэсгийг ол.`, ans, [ans+k, Math.max(1,ans-k), num-ans, ans+n]), `of:${num},${n}/${d}`);
       } else {
         const a = rInt(1, 9)/10, b = rInt(1, 9)/10;
         const ans = Number((a + b).toFixed(1));
-        add(makeQ(`${a} + ${b} = ?`, ans, [Number((ans+0.1).toFixed(1)), Number((ans+1).toFixed(1)), Number(Math.abs(ans-0.2).toFixed(1))]));
+        add(makeQ(`${a} + ${b} = ?`, ans, [Number((ans+0.1).toFixed(1)), Number((ans+1).toFixed(1)), Number(Math.abs(ans-0.2).toFixed(1))]), `d+:${Math.min(a,b)},${Math.max(a,b)}`);
       }
     }
   } else if (topicId === 'm_pct') {
     let guard = 0;
-    while (out.length < 44 && guard < 500) {
+    while (out.length < 44 && guard < 800) {
       guard++;
       const p = [10,20,25,30,40,50,60,75,80][guard%9];
       const base = rInt(2, 25) * 20;
       const ans = Math.round(base * p / 100);
       if (guard % 2 === 0) {
-        add(makeQ(`${base} тооны ${p}% нь хэд вэ?`, ans, [ans+10, Math.max(1,ans-10), Math.round(ans/2), ans+20]));
+        add(makeQ(`${base} тооны ${p}% нь хэд вэ?`, ans, [ans+10, Math.max(1,ans-10), Math.round(ans/2), ans+20]), `pct:${base},${p}`);
       } else {
         const disc = base - ans;
-        add(makeQ(`${base} төгрөгийн барааг ${p}% хямдруулав. Хэдэн төгрөгөөр зарах вэ?`, disc, [ans, base+ans, disc+20, Math.max(10,disc-20)]));
+        add(makeQ(`${base} төгрөгийн барааг ${p}% хямдруулав. Хэдэн төгрөгөөр зарах вэ?`, disc, [ans, base+ans, disc+20, Math.max(10,disc-20)]), `disc:${base},${p}`);
       }
     }
   } else if (topicId === 'm_lin') {
     let guard = 0;
-    while (out.length < 44 && guard < 500) {
+    while (out.length < 44 && guard < 800) {
       guard++;
       const mode = guard % 3;
       if (mode === 0) {
         const a = rInt(2, 9), x = rInt(-6, 12), b = rInt(1, 20), c = a * x + b;
-        add(makeQ(`${a}x + ${b} = ${c} тэгшитгэлийг бод.`, x, [x+1, x-1, x+2, -x]));
+        add(makeQ(`${a}x + ${b} = ${c} тэгшитгэлийг бод.`, x, [x+1, x-1, x+2, -x]), `l1:${a},${b},${c}`);
       } else if (mode === 1) {
         const a = rInt(2, 8), x = rInt(2, 14), b = rInt(1, 15), c = a * x - b;
-        add(makeQ(`${a}x − ${b} = ${c} бол x = ?`, x, [x+1, x-1, x+3, x-2]));
+        add(makeQ(`${a}x − ${b} = ${c} бол x = ?`, x, [x+1, x-1, x+3, x-2]), `l2:${a},${b},${c}`);
       } else {
         const k = rInt(2, 6), b = rInt(-5, 10), x = rInt(1, 8), y = k * x + b;
         const bStr = b >= 0 ? `+ ${b}` : `− ${Math.abs(b)}`;
-        add(makeQ(`y = ${k}x ${bStr} функцийн x = ${x} үеийн утгыг ол.`, y, [y+k, y-k, y+2, y-2]));
+        add(makeQ(`y = ${k}x ${bStr} функцийн x = ${x} үеийн утгыг ол.`, y, [y+k, y-k, y+2, y-2]), `fn:${k},${b},${x}`);
       }
     }
   } else if (topicId === 'm_quad') {
-    for (let i = 2; i <= 25; i++) {
-      add(makeQ(`√${i*i} утгыг ол.`, i, [i+1, i-1, i*2, i+3]));
-    }
+    [4,9,16,25,36,49,64,81,100,121,144,169,196,225,256,400,625].forEach(sq => {
+      const i = Math.round(Math.sqrt(sq));
+      add(makeQ(`√${sq} утгыг ол.`, i, [i+1, i-1, i*2, i+3]), `sqrt:${sq}`);
+    });
     let guard = 0;
-    while (out.length < 44 && guard < 400) {
+    while (out.length < 44 && guard < 800) {
       guard++;
-      const r1 = rInt(1, 10), r2 = rInt(1, 10);
-      const b = -(r1 + r2), c = r1 * r2;
-      if (guard % 2 === 0) {
-        add(makeQ(`x² ${b}x + ${c} = 0 тэгшитгэлийн шийдүүдийн нийлбэрийг ол.`, r1 + r2, [c, -(r1+r2), r1+r2+2, Math.abs(r1-r2)]));
+      if (guard % 3 === 0) {
+        const r1 = rInt(1, 9), r2 = rInt(r1, 10);
+        const b = -(r1 + r2), c = r1 * r2;
+        add(makeQ(`x² ${b}x + ${c} = 0 тэгшитгэлийн шийдүүдийн нийлбэрийг ол.`, r1 + r2, [c, -(r1+r2), r1+r2+2, Math.abs(r1-r2)+1]), `v:${r1},${r2}`);
+      } else if (guard % 3 === 1) {
+        const r1 = rInt(1, 9), r2 = rInt(r1, 10);
+        const b = -(r1 + r2), c = r1 * r2;
+        add(makeQ(`x² ${b}x + ${c} = 0 тэгшитгэлийн шийдүүдийн үржвэрийг ол.`, c, [r1+r2, -c, c+1, Math.max(1,c-2)]), `v:${r1},${r2}`);
       } else {
-        add(makeQ(`x² ${b}x + ${c} = 0 тэгшитгэлийн шийдүүдийн үржвэрийг ол.`, c, [r1+r2, -c, c+1, Math.max(1,c-2)]));
+        const a = rInt(1, 3), b = rInt(4, 9), c = rInt(1, 5);
+        const disc = b*b - 4*a*c;
+        add(makeQ(`${a === 1 ? '' : a}x² + ${b}x + ${c} = 0 тэгшитгэлийн дискриминант D-г ол.`, disc, [disc+4, disc-4, b*b + 4*a*c, Math.abs(disc-8)]), `D:${a},${b},${c}`);
       }
     }
   } else if (topicId === 'm_tri') {
@@ -1523,18 +1539,18 @@ function buildTopicBank(topicId) {
       makeQ('Тэгш өнцөгт гурвалжны хамгийн урт талыг юу гэдэг вэ?', 'Гипотенуз', ['Катет', 'Медиан', 'Биссектрис']),
       makeQ('Адил талт гурвалжны өнцөг бүр хэдэн градус вэ?', 60, [45, 90, 30]),
       makeQ('Дөрвөн өнцөгтийн дотоод өнцгүүдийн нийлбэр хэдэн градус вэ?', 360, [180, 540, 270]),
-      makeQ('Таван өнцөгтийн дотоод өнцгүүдийн нийлбэр хэдэн градус вэ?', 540, [360, 720, 450])
-    ].forEach(add);
+      makeQ('Таван өнцөгтийн дотоод өнцгүүдийн нийлбэр хэдэн градус вэ?', 540, [360, 720, 450]),
+      makeQ('Зургаан өнцөгтийн дотоод өнцгүүдийн нийлбэр хэдэн градус вэ?', 720, [540, 900, 360]),
+      makeQ('Найман өнцөгтийн дотоод өнцгүүдийн нийлбэр хэдэн градус вэ?', 1080, [720, 900, 1260])
+    ].forEach(q => add(q));
+    const pyth = [[3,4,5],[6,8,10],[5,12,13],[9,12,15],[8,15,17],[12,16,20],[7,24,25],[10,24,26],[15,20,25],[12,35,37],[9,40,41],[20,21,29]];
+    pyth.forEach(([a,b,c]) => add(makeQ(`Тэгш өнцөгт гурвалжны катетууд ${a} см ба ${b} см бол гипотенузыг ол (см).`, c, [c+1, c-1, a+b, c+2]), `py:${a},${b}`));
     let guard = 0;
-    while (out.length < 44 && guard < 400) {
+    while (out.length < 44 && guard < 600) {
       guard++;
-      if (guard % 2 === 0) {
-        const a = rInt(25, 85), b = rInt(20, 140 - a), c = 180 - a - b;
-        add(makeQ(`Гурвалжны хоёр өнцөг нь ${a}° ба ${b}° бол гурав дахь өнцгийг ол.`, `${c}°`, [`${c+10}°`, `${Math.max(5,c-10)}°`, `${180-a}°`]));
-      } else {
-        const k = rInt(1, 8), a = 3*k, b = 4*k, c = 5*k;
-        add(makeQ(`Тэгш өнцөгт гурвалжны катетууд ${a} см ба ${b} см бол гипотенузыг ол (см).`, c, [c+1, c-1, a+b, c+2]));
-      }
+      const a = rInt(20, 80), b = rInt(a, 145 - a), c = 180 - a - b;
+      if (c < 10) continue;
+      add(makeQ(`Гурвалжны хоёр өнцөг нь ${a}° ба ${b}° бол гурав дахь өнцгийг ол.`, `${c}°`, [`${c+10}°`, `${Math.max(5,c-10)}°`, `${180-a}°`]), `ang:${a},${b}`);
     }
   } else if (topicId === 'm_trig') {
     const trigExact = [
@@ -1570,17 +1586,27 @@ function buildTopicBank(topicId) {
       }
     }
   } else if (topicId === 'm_log') {
-    let guard = 0;
-    while (out.length < 44 && guard < 400) {
-      guard++;
-      const a = [2, 3, 4, 5, 10][guard % 5];
-      const k = (guard % 5) + 1;
-      const b = Math.pow(a, k);
-      if (guard % 2 === 0) {
-        add(makeQ(`log_${a}(${b}) утгыг ол.`, k, [k+1, Math.max(0,k-1), a, b]));
-      } else {
-        add(makeQ(`${a}^x = ${b} тэгшитгэлийг бод.`, k, [k+1, Math.max(0,k-1), k+2, a]));
+    const bases = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+    bases.forEach(a => {
+      add(makeQ(`log_${a}(1) утгыг ол.`, 0, [1, a, -1]), `l1:${a}`);
+      add(makeQ(`log_${a}(${a}) утгыг ол.`, 1, [0, a, 2]), `la:${a}`);
+    });
+    const pairs = [];
+    [2,3,4,5,6,7,8,9,10].forEach(a => {
+      for (let k = 2; k <= 5; k++) {
+        if (Math.pow(a, k) <= 10000) pairs.push([a, k, Math.pow(a, k)]);
       }
+    });
+    shuffleArr(pairs).forEach(([a, k, b], idx) => {
+      if (out.length >= 44) return;
+      if (idx % 2 === 0) add(makeQ(`log_${a}(${b}) утгыг ол.`, k, [k+1, Math.max(1,k-1), a, k+2]), `lg:${a},${k}`);
+      else add(makeQ(`${a}^x = ${b} тэгшитгэлийг бод.`, k, [k+1, Math.max(1,k-1), a, k+2]), `lg:${a},${k}`);
+    });
+    let guard = 0;
+    while (out.length < 44 && guard < 200) {
+      guard++;
+      const a = [2,3,5,10][guard%4], m = rInt(2,5), n = rInt(2,5);
+      add(makeQ(`${a}^${m} · ${a}^${n} = ${a}^x бол x-ийг ол.`, m+n, [m*n, Math.abs(m-n)+1, m+n+1]), `ep:${a},${m},${n}`);
     }
   } else if (topicId === 'm_calc') {
     [
@@ -1632,13 +1658,21 @@ function buildTopicBank(topicId) {
       [6,'C','Нүүрстөрөгч'],[7,'N','Азот'],[8,'O','Хүчилтөрөгч'],[9,'F','Фтор'],[10,'Ne','Неон'],
       [11,'Na','Натри'],[12,'Mg','Магни'],[13,'Al','Хөнгөн цагаан'],[14,'Si','Цахиур'],[15,'P','Фосфор'],
       [16,'S','Хүхэр'],[17,'Cl','Хлор'],[18,'Ar','Аргон'],[19,'K','Кали'],[20,'Ca','Кальци'],
-      [26,'Fe','Төмөр'],[29,'Cu','Зэс'],[30,'Zn','Цайр'],[47,'Ag','Мөнгө'],[79,'Au','Алт'],
-      [80,'Hg','Мөнгөн ус'],[82,'Pb','Хар тугалга'],[53,'I','Иод'],[35,'Br','Бром'],[78,'Pt','Цагаан алт']
+      [21,'Sc','Сканди'],[22,'Ti','Титан'],[24,'Cr','Хром'],[25,'Mn','Марганец'],[26,'Fe','Төмөр'],
+      [27,'Co','Кобальт'],[28,'Ni','Никель'],[29,'Cu','Зэс'],[30,'Zn','Цайр'],[33,'As','Хүнцэл'],
+      [35,'Br','Бром'],[36,'Kr','Криптон'],[38,'Sr','Стронци'],[47,'Ag','Мөнгө'],[50,'Sn','Цагаан тугалга'],
+      [53,'I','Иод'],[54,'Xe','Ксенон'],[56,'Ba','Бари'],[74,'W','Вольфрам'],[78,'Pt','Цагаан алт'],
+      [79,'Au','Алт'],[80,'Hg','Мөнгөн ус'],[82,'Pb','Хар тугалга'],[92,'U','Уран']
     ];
     const allNames = els.map(e=>e[2]), allSyms = els.map(e=>e[1]);
-    els.forEach(([num, sym, name]) => {
-      add(makeQ(`«${name}» химийн элементийн тэмдэглэгээ аль нь вэ?`, sym, shuffleArr(allSyms.filter(x=>x!==sym)).slice(0,3)));
-      add(makeQ(`«${sym}» химийн тэмдэглэгээ аль элемент вэ?`, name, shuffleArr(allNames.filter(x=>x!==name)).slice(0,3)));
+    els.forEach(([num, sym, name], idx) => {
+      if (idx % 3 === 0) {
+        add(makeQ(`«${name}» химийн элементийн тэмдэглэгээ аль нь вэ?`, sym, shuffleArr(allSyms.filter(x=>x!==sym)).slice(0,3)), `el:${sym}`);
+      } else if (idx % 3 === 1) {
+        add(makeQ(`«${sym}» химийн тэмдэглэгээ аль элемент вэ?`, name, shuffleArr(allNames.filter(x=>x!==name)).slice(0,3)), `el:${sym}`);
+      } else {
+        add(makeQ(`Үелэх системд ${num} дүгээр атомын дугаартай элемент аль нь вэ?`, `${name} (${sym})`, shuffleArr(els.filter(x=>x[1]!==sym)).slice(0,3).map(x=>`${x[2]} (${x[1]})`)), `el:${sym}`);
+      }
     });
   } else if (topicId === 'ch_react') {
     const formulas = [
@@ -1647,13 +1681,28 @@ function buildTopicBank(topicId) {
       ['O₂','Хүчилтөрөгч хий'],['O₃','Озон'],['CaCO₃','Кальцийн карбонат (шохой)'],['HNO₃','Азотын хүчил'],
       ['KOH','Калийн шүлт'],['Fe₂O₃','Төмрийн (III) оксид'],['CuSO₄','Зэсийн сульфат'],['Na₂CO₃','Сод'],
       ['CaO','Түүхий шохой'],['C₂H₅OH','Этилийн спирт'],['C₆H₁₂O₆','Глюкоз'],['N₂','Азот хий'],
-      ['H₂','Устөрөгч хий'],['CO','Угаарын хий'],['SO₂','Хүхэрлэг хий'],['NO₂','Азотын диоксид']
+      ['H₂','Устөрөгч хий'],['CO','Угаарын хий'],['SO₂','Хүхэрлэг хий'],['NO₂','Азотын диоксид'],
+      ['H₂O₂','Устөрөгчийн хэт исэл'],['NaHCO₃','Хүнсний сод'],['KMnO₄','Калийн перманганат (марганцовк)'],
+      ['AgNO₃','Мөнгөний нитрат'],['Ca(OH)₂','Унтраасан шохой'],['MgO','Магнийн оксид'],
+      ['Al₂O₃','Хөнгөн цагааны оксид'],['CH₃COOH','Цууны хүчил']
     ];
     const fNames = formulas.map(x=>x[1]), fSyms = formulas.map(x=>x[0]);
-    formulas.forEach(([f, n]) => {
-      add(makeQ(`${f} химийн томьёо ямар бодис вэ?`, n, shuffleArr(fNames.filter(x=>x!==n)).slice(0,3)));
-      add(makeQ(`«${n}» бодисын химийн томьёо аль нь вэ?`, f, shuffleArr(fSyms.filter(x=>x!==f)).slice(0,3)));
+    formulas.forEach(([f, n], idx) => {
+      if (idx % 2 === 0) add(makeQ(`${f} химийн томьёо ямар бодис вэ?`, n, shuffleArr(fNames.filter(x=>x!==n)).slice(0,3)), `f:${f}`);
+      else add(makeQ(`«${n}» бодисын химийн томьёо аль нь вэ?`, f, shuffleArr(fSyms.filter(x=>x!==f)).slice(0,3)), `f:${f}`);
     });
+    [
+      ['Цэвэр усны рН утга хэд вэ?', '7 (саармаг)', ['1', '14', '3']],
+      ['Хүчиллэг орчны рН ямар утгатай байдаг вэ?', '7-оос бага (pH < 7)', ['7-оос их', 'Яг 7', '14-өөс их']],
+      ['Шүлтлэг орчны рН ямар утгатай байдаг вэ?', '7-оос их (pH > 7)', ['7-оос бага', 'Яг 0', 'Яг 7']],
+      ['Усны молекул ямар атомуудаас бүрдэх вэ?', '2 устөрөгч, 1 хүчилтөрөгч', ['1 устөрөгч, 2 хүчилтөрөгч', '2 азот, 1 хүчилтөрөгч', '2 нүүрстөрөгч, 1 устөрөгч']],
+      ['Хүчил ба суурь урвалд ороход ямар бодис үүсэх вэ?', 'Давс ба ус', ['Зөвхөн хий', 'Зөвхөн металл', 'Хүчилтөрөгч']],
+      ['Уусмалд лакмус цаас хүчлийн нөлөөгөөр ямар өнгөтэй болдог вэ?', 'Улаан', ['Хөх', 'Ногоон', 'Шар']],
+      ['Агаар дахь хүчилтөрөгчийн эзлэх хувь хэд вэ?', 'Ойролцоогоор 21%', ['78%', '50%', '1%']],
+      ['Хүчилтөрөгчийн харьцангуй атом масс хэд вэ?', '16', ['12', '14', '32']],
+      ['Нүүрстөрөгчийн харьцангуй атом масс хэд вэ?', '12', ['14', '16', '6']],
+      ['Усны (H₂O) молийн масс хэдэн г/моль вэ?', '18 г/моль', ['16 г/моль', '20 г/моль', '34 г/моль']]
+    ].forEach(([q,a,w]) => add(makeQ(q,a,w)));
   } else if (topicId === 'ph_mech') {
     const units = [
       ['Хүч','Ньютон (Н)'],['Хурд','м/с'],['Ажил ба энерги','Жоуль (Ж)'],['Чадал','Ватт (Вт)'],
@@ -1663,17 +1712,17 @@ function buildTopicBank(topicId) {
     const uVals = units.map(u=>u[1]);
     units.forEach(([q, u]) => add(makeQ(`${q} хэмжигдэхүүний СИ систем дэх нэгж юу вэ?`, u, shuffleArr(uVals.filter(x=>x!==u)).slice(0,3))));
     let guard = 0;
-    while (out.length < 44 && guard < 400) {
+    while (out.length < 44 && guard < 600) {
       guard++;
       if (guard % 3 === 0) {
         const v = rInt(5, 30), t = rInt(2, 12);
-        add(makeQ(`Бие ${v} м/с тогтмол хурдаар ${t} секундэд хэдэн метр зам туулах вэ?`, v*t, [v+t, v*t+v, Math.max(1,v*t-t)]));
+        add(makeQ(`Бие ${v} м/с тогтмол хурдаар ${t} секундэд хэдэн метр зам туулах вэ?`, v*t, [v+t, v*t+v, Math.max(1,v*t-t)]), `vt:${v},${t}`);
       } else if (guard % 3 === 1) {
         const m = rInt(2, 20), a = rInt(2, 10);
-        add(makeQ(`${m} кг масстай биед ${a} м/с² хурдатгал өгөхөд ямар хүч (Н) шаардлагатай вэ?`, m*a, [m+a, m*a+m, Math.max(1,m*a-a)]));
+        add(makeQ(`${m} кг масстай биед ${a} м/с² хурдатгал өгөхөд ямар хүч (Н) шаардлагатай вэ?`, m*a, [m+a, m*a+m, Math.max(1,m*a-a)]), `ma:${m},${a}`);
       } else {
         const f = rInt(5, 25), s = rInt(2, 15);
-        add(makeQ(`${f} Н хүчээр биеийг ${s} м шилжүүлэхэд хийгдэх ажил (Ж) хэд вэ?`, f*s, [f+s, f*s+f, Math.max(1,f*s-s)]));
+        add(makeQ(`${f} Н хүчээр биеийг ${s} м шилжүүлэхэд хийгдэх ажил (Ж) хэд вэ?`, f*s, [f+s, f*s+f, Math.max(1,f*s-s)]), `fs:${f},${s}`);
       }
     }
   } else if (topicId === 'ph_elec') {
@@ -1686,14 +1735,14 @@ function buildTopicBank(topicId) {
     const euVals = eUnits.map(x=>x[1]);
     eUnits.forEach(([q,u]) => add(makeQ(`${q}-ийг ямар нэгжээр хэмждэг вэ?`, u, shuffleArr(euVals.filter(x=>x!==u)).slice(0,3))));
     let guard = 0;
-    while (out.length < 44 && guard < 400) {
+    while (out.length < 44 && guard < 600) {
       guard++;
       if (guard % 2 === 0) {
         const i = rInt(1, 12), r = rInt(2, 20), u = i * r;
-        add(makeQ(`Эсэргүүцэл нь ${r} Ом, гүйдлийн хүч ${i} А бол хүчдэлийг ол (В).`, u, [i+r, u+r, Math.max(1,u-i)]));
+        add(makeQ(`Эсэргүүцэл нь ${r} Ом, гүйдлийн хүч ${i} А бол хүчдэлийг ол (В).`, u, [i+r, u+r, Math.max(1,u-i)]), `ir:${i},${r}`);
       } else {
         const u = rInt(5, 24), i = rInt(2, 10), p = u * i;
-        add(makeQ(`Хүчдэл ${u} В, гүйдлийн хүч ${i} А үед цахилгаан чадал хэдэн Ватт вэ?`, p, [u+i, p+u, Math.max(1,p-i)]));
+        add(makeQ(`Хүчдэл ${u} В, гүйдлийн хүч ${i} А үед цахилгаан чадал хэдэн Ватт вэ?`, p, [u+i, p+u, Math.max(1,p-i)]), `ui:${u},${i}`);
       }
     }
   } else if (topicId === 'bio_cell') {
@@ -1991,12 +2040,33 @@ function buildTopicBank(topicId) {
       ['break','broke','broken'],['drive','drove','driven'],['begin','began','begun'],['drink','drank','drunk'],
       ['sing','sang','sung'],['swim','swam','swum'],['fly','flew','flown'],['know','knew','known'],
       ['grow','grew','grown'],['throw','threw','thrown'],['make','made','made'],['find','found','found'],
-      ['buy','bought','bought'],['bring','brought','brought'],['think','thought','thought'],['teach','taught','taught']
+      ['buy','bought','bought'],['bring','brought','brought'],['think','thought','thought'],['teach','taught','taught'],
+      ['read','read','read'],['run','ran','run'],['sleep','slept','slept'],['wear','wore','worn'],
+      ['choose','chose','chosen'],['forget','forgot','forgotten']
     ];
-    irreg.forEach(([v1, v2, v3]) => {
-      add(makeQ(`«${v1}» үйл үгийн өнгөрсөн цаг (Past Simple / V2) аль нь вэ?`, v2, [v1+'ed', v3 === v2 ? v1+'s' : v3, v1+'ing']));
-      add(makeQ(`«${v1}» үйл үгийн Past Participle (V3) хэлбэр аль нь вэ?`, v3, [v1+'ed', v2 === v3 ? v1+'ing' : v2, v1+'s']));
+    irreg.forEach(([v1, v2, v3], idx) => {
+      if (idx % 2 === 0) {
+        add(makeQ(`«${v1}» үйл үгийн өнгөрсөн цаг (Past Simple / V2) аль нь вэ?`, v2, [v1+'ed', v3 === v2 ? v1+'s' : v3, v1+'ing']), `v:${v1}`);
+      } else {
+        add(makeQ(`«${v1}» үйл үгийн Past Participle (V3) хэлбэр аль нь вэ?`, v3, [v1+'ed', v2 === v3 ? v1+'ing' : v2, v1+'s']), `v:${v1}`);
+      }
     });
+    [
+      ['She ___ to school every day.', 'goes', ['go', 'going', 'gone']],
+      ['They ___ football yesterday.', 'played', ['play', 'plays', 'playing']],
+      ['I ___ watching a movie right now.', 'am', ['is', 'are', 'be']],
+      ['He has ___ his homework already.', 'finished', ['finish', 'finishing', 'finishes']],
+      ['___ you like some tea?', 'Would', ['Are', 'Have', 'Does']],
+      ['There ___ many books on the table.', 'are', ['is', 'am', 'be']],
+      ['My brother is ___ than me.', 'taller', ['tall', 'tallest', 'more tall']],
+      ['Mount Everest is the ___ mountain in the world.', 'highest', ['high', 'higher', 'most high']],
+      ['I was born ___ May.', 'in', ['on', 'at', 'to']],
+      ['The meeting starts ___ 9 o’clock.', 'at', ['in', 'on', 'by']],
+      ['My birthday is ___ Monday.', 'on', ['in', 'at', 'for']],
+      ['This is ___ apple.', 'an', ['a', 'the', 'two']],
+      ['We ___ visit our grandparents tomorrow.', 'will', ['did', 'was', 'has']],
+      ['How ___ students are in your class?', 'many', ['much', 'any', 'lot']]
+    ].forEach(([q,a,w]) => add(makeQ(q,a,w)));
   } else if (topicId === 'en_vocab') {
     const words = [
       ['Book','Ном'],['Teacher','Багш'],['Student','Сурагч'],['School','Сургууль'],['Water','Ус'],
