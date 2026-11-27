@@ -350,6 +350,35 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
 </div>
 
 <!-- ══════════════════════════════════════════════════
+     STUDENT DASHBOARD — Сурагчийн амжилтын хуудас
+══════════════════════════════════════════════════ -->
+<div id="v-sdash" class="view">
+  <div class="card wide full">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div>
+        <h2 style="margin:0">🎓 Миний амжилт</h2>
+        <p class="muted" style="font-size:.85rem;margin:0" id="sdash-welcome"></p>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="showView('v-landing')">📱 QR уншиж нэгдэх</button>
+        <button class="btn btn-sm" onclick="doLogout()">🚪 Гарах</button>
+      </div>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="stats-row" style="margin-bottom:20px">
+      <div class="stat-box"><div class="snum" id="sd-total">0</div><div class="slbl">Нийт уралдаан</div></div>
+      <div class="stat-box"><div class="snum" id="sd-avg">0</div><div class="slbl">Дундаж оноо</div></div>
+      <div class="stat-box"><div class="snum" id="sd-best">0</div><div class="slbl">Хамгийн өндөр</div></div>
+    </div>
+
+    <!-- History list -->
+    <h3>📋 Уралдааны түүх</h3>
+    <div id="sdash-list"><p class="muted center" style="padding:24px 0">Одоогоор уралдаанд оролцоогүй байна.<br>QR уншиж уралдаанд нэгдэнэ үү!</p></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
      DASHBOARD — Багшийн нүүр
 ══════════════════════════════════════════════════ -->
 <div id="v-dashboard" class="view">
@@ -580,6 +609,10 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
     <h3>🏆 Нийт дүн</h3>
     <div id="sr-lb"></div>
   </div>
+  <div class="card" style="max-width:440px">
+    <button class="btn btn-primary btn-full" onclick="goToStudentDash()">📊 Миний амжилт харах</button>
+    <button class="btn btn-full" onclick="showView('v-landing')">🏠 Нүүр хуудас</button>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════
@@ -680,8 +713,9 @@ function init() {
       try { initFB(JSON.parse(saved)); loadDashboard(); showView('v-dashboard'); }
       catch(e) { showView('v-setup'); }
     } else {
-      // Student logged in — go to landing to scan QR
-      showView('v-landing');
+      // Student logged in — go to student dashboard
+      loadStudentDashboard();
+      showView('v-sdash');
     }
   } else {
     // Not logged in — check Firebase config exists for teacher view
@@ -838,14 +872,62 @@ function onAuthSuccess() {
     catch(e) { showView('v-setup'); return; }
     loadDashboard(); showView('v-dashboard');
   } else {
-    // Student: go to landing (they join via QR)
-    showView('v-landing');
-    toast('Сурагч нэвтэрлээ! QR кодоор уралдаанд нэгдэнэ үү 📱');
+    // Student: go to student dashboard
+    loadStudentDashboard();
+    showView('v-sdash');
   }
 }
 
 // ═══════════════════════════════
-// DASHBOARD
+// STUDENT DASHBOARD
+// ═══════════════════════════════
+function loadStudentDashboard() {
+  if (!currentAccount) return;
+  ge('sdash-welcome').textContent = `Сайн байна уу, ${currentAccount.name} 👋  •  📞 ${currentAccount.phone}`;
+
+  const histKey = 'qs-hist-' + currentAccount.phone;
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem(histKey)||'[]'); } catch(e){}
+
+  // Stats
+  ge('sd-total').textContent = hist.length;
+  if (hist.length) {
+    const avg = Math.round(hist.reduce((s,r)=>s+r.score,0)/hist.length);
+    const best = Math.max(...hist.map(r=>r.score));
+    ge('sd-avg').textContent  = avg;
+    ge('sd-best').textContent = best;
+  } else {
+    ge('sd-avg').textContent  = 0;
+    ge('sd-best').textContent = 0;
+  }
+
+  // History rows
+  const list = ge('sdash-list');
+  if (!hist.length) {
+    list.innerHTML = '<p class="muted center" style="padding:24px 0">Одоогоор уралдаанд оролцоогүй байна.<br>QR уншиж уралдаанд нэгдэнэ үү!</p>';
+    return;
+  }
+  list.innerHTML = hist.map((r,i)=>{
+    const medal = r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':'🎯';
+    const rankCls = r.rank===1?'badge-gold':r.rank<=3?'badge-green':'badge-blue';
+    const dt = new Date(r.at).toLocaleString('mn-MN',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `
+    <div class="lb-row" style="margin-bottom:8px;flex-wrap:wrap;gap:8px">
+      <div class="lb-rank">${medal}</div>
+      <div class="lb-info">
+        <div class="lb-name">${esc(r.setName||'Уралдаан')}</div>
+        <div class="lb-sub">${dt} · ${r.qs||'?'} асуулт · ${r.total||'?'} оролцогч</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+        <span class="badge ${rankCls}">${r.rank}-р байр</span>
+        <span class="lb-pts">${r.score}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════
+// DASHBOARD (TEACHER)
 // ═══════════════════════════════
 async function loadDashboard() {
   if (!currentAccount) return;
@@ -875,6 +957,10 @@ async function loadDashboard() {
   `).join('');
 }
 
+function goToStudentDash() {
+  loadStudentDashboard();
+  showView('v-sdash');
+}
 function goToDash() { clearAll(); loadDashboard(); showView('v-dashboard'); }
 
 async function delSet(id) {
@@ -960,6 +1046,7 @@ async function startSession(setId) {
   await db.ref(`sessions/${sessionId}`).set({
     tid: currentAccount.phone,
     tname: currentAccount.name||'Багш',
+    setTitle: set.title||'Уралдаан',
     status: 'lobby',
     cq: -1,
     qst: 0,
@@ -1357,6 +1444,25 @@ function renderStudentResults(s) {
       <div class="lb-pts">${x.score}</div>
     </div>
   `).join('');
+
+  // ── Save result to student history ──
+  const sess = getSession();
+  if (sess && sess.role === 'student') {
+    const histKey = 'qs-hist-' + sess.phone;
+    let hist = [];
+    try { hist = JSON.parse(localStorage.getItem(histKey)||'[]'); } catch(e){}
+    hist.unshift({
+      lesson : s.tname ? s.tname + ' — хичээл' : 'Уралдаан',
+      setName: s.setTitle || s.tname || 'Уралдаан',
+      score  : me.score||0,
+      rank   : myRank,
+      total  : ranked.length,
+      qs     : s.total||0,
+      at     : Date.now()
+    });
+    if (hist.length > 50) hist = hist.slice(0,50);
+    localStorage.setItem(histKey, JSON.stringify(hist));
+  }
 }
 
 // ═══════════════════════════════
