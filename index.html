@@ -138,14 +138,40 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
 .lb-sub{color:#7a85a3;font-size:.8rem}
 .lb-pts{font-size:1.5rem;font-weight:800;color:#6366f1;flex-shrink:0}
 
-/* ===== AVATAR / COLOR PICKERS ===== */
+/* ===== AVATAR / COLOR / OUTFIT PICKERS ===== */
 .avatar-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .av-opt{font-size:2rem;cursor:pointer;padding:6px 7px;border-radius:10px;border:2px solid transparent;transition:all .15s;user-select:none}
 .av-opt:hover{background:#1e1e44}
 .av-opt.sel{border-color:#6366f1;background:#22224a}
+.outfit-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.out-opt{display:inline-flex;align-items:center;gap:5px;padding:7px 11px;border-radius:10px;border:2px solid #252547;background:#0b0b18;cursor:pointer;font-size:.9rem;font-weight:600;transition:all .15s;user-select:none}
+.out-opt:hover{border-color:#6366f1;background:#1e1e44}
+.out-opt.sel{border-color:#6366f1;background:#22224a;color:#fff}
 .color-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 .col-opt{width:38px;height:38px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s}
 .col-opt.sel{border-color:#fff;transform:scale(1.25);box-shadow:0 0 0 2px #6366f1}
+.char-preview{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:14px;border-radius:14px;background:#0b0b18;border:2px solid #252547;
+  margin-bottom:16px;transition:border-color .2s;
+}
+.char-badge{position:relative;display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:18px;font-size:2.4rem;border:2px solid}
+.char-outfit{position:absolute;bottom:-6px;right:-8px;font-size:1.35rem;background:#13132a;border-radius:50%;padding:2px 4px;border:1px solid #252547;line-height:1}
+
+/* ===== RACE TRACK ===== */
+.race-track{background:#13132a;border:1px solid #252547;border-radius:14px;padding:14px;margin-bottom:16px}
+.race-lane{position:relative;height:34px;background:#0b0b18;border-radius:99px;margin-bottom:8px;overflow:hidden;border:1px solid #1e1e3a;display:flex;align-items:center;padding:0 10px}
+.race-lane:last-child{margin-bottom:0}
+.race-fill{position:absolute;left:0;top:0;bottom:0;opacity:.22;border-radius:99px;transition:width .4s ease}
+.race-runner{position:relative;z-index:1;display:flex;align-items:center;gap:6px;font-size:.88rem;font-weight:700;transition:margin-left .4s ease;white-space:nowrap}
+.race-score{margin-left:auto;position:relative;z-index:1;font-size:.82rem;font-weight:800;color:#93c5fd}
+
+/* ===== PODIUM ===== */
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin:18px 0 22px;flex-wrap:wrap}
+.pod-col{flex:1;min-width:100px;max-width:150px;text-align:center;background:#0b0b18;border:1px solid #252547;border-radius:14px;padding:14px 8px}
+.pod-1{border-color:#eab308;background:linear-gradient(180deg,#eab30820,#0b0b18);transform:translateY(-8px)}
+.pod-2{border-color:#94a3b8;background:linear-gradient(180deg,#94a3b818,#0b0b18)}
+.pod-3{border-color:#f97316;background:linear-gradient(180deg,#f9731618,#0b0b18)}
 
 /* ===== STUDENT CHIP ===== */
 .s-chip{
@@ -404,7 +430,7 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
       <span class="t-num" id="tg-time" style="font-size:1.8rem;color:#22c55e">60</span>
     </div>
     <div class="btn-group" style="justify-content:flex-end">
-      <button class="btn btn-warning btn-sm" onclick="nextQuestion()">Дараагийн →</button>
+      <button class="btn btn-warning btn-sm" id="tg-next-btn" onclick="nextQuestion()">Дараагийн →</button>
     </div>
   </div>
 
@@ -422,9 +448,11 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
     <div class="stat-box"><div class="snum" id="tg-nnone" style="color:#7a85a3">0</div><div class="slbl">⏳ Хариуллаагүй</div></div>
   </div>
 
-  <!-- Mini leaderboard -->
+  <!-- Live race track + leaderboard -->
   <div style="width:100%;max-width:700px">
-    <h3>🏆 Топ 5</h3>
+    <h3>🏎️ Уралдааны зам (Топ 5)</h3>
+    <div class="race-track" id="tg-race-track"></div>
+    <h3>🏆 Онооны самбар</h3>
     <div id="tg-mini-lb"></div>
   </div>
 </div>
@@ -445,13 +473,24 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
      STUDENT JOIN
 ══════════════════════════════════════════════════ -->
 <div id="v-sjoin" class="view">
-  <div class="card" style="max-width:440px;margin-top:30px">
-    <span class="hero-icon">🎮</span>
-    <h2 class="center">Уралдаанд нэгдэх</h2>
+  <div class="card" style="max-width:460px;margin-top:24px">
+    <h2 class="center" style="margin-bottom:14px">🎮 Уралдаанд нэгдэх</h2>
+    <div class="char-preview" id="char-preview">
+      <div class="char-badge" id="pv-badge" style="border-color:#ef4444;background:#ef444420">
+        <span id="pv-av">🦁</span>
+        <span class="char-outfit" id="pv-out">👕</span>
+      </div>
+      <div>
+        <div id="pv-name" style="font-weight:800;font-size:1.1rem;color:#ef4444">Тоглогч</div>
+        <div class="muted" style="font-size:.8rem" id="pv-out-lbl">Футболка</div>
+      </div>
+    </div>
     <label>Таны нэр (20 тэмдэгт)</label>
-    <input id="s-name" placeholder="Нэрээ бич..." maxlength="20">
+    <input id="s-name" placeholder="Нэрээ бич..." maxlength="20" oninput="updatePreview()">
     <label>Дүр сонго</label>
     <div class="avatar-grid" id="av-grid"></div>
+    <label>Хувцас / Гоёл сонго</label>
+    <div class="outfit-grid" id="out-grid"></div>
     <label>Өнгө сонго</label>
     <div class="color-grid" id="col-grid"></div>
     <button class="btn btn-primary btn-full btn-lg" onclick="studentJoin()">✅ Нэгдэх</button>
@@ -535,7 +574,19 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
 // ═══════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════
-const AVATARS = ['🦁','🐯','🦊','🐺','🐻','🐼','🐨','🐸','🦋','🦄','🐬','🦅','🐉','🤖','👾','🐙','🦑','🐥','🦉','🦚','🐓','🕊️','🐇','🦝','🦨','🦡','🐥','🐧'];
+const AVATARS = ['🦁','🐯','🦊','🐺','🐻','🐼','🐨','🐸','🦋','🦄','🐬','🦅','🐉','🤖','👾','🐙','🦑','🐥','🦉','🦚','🐓','🕊️','🐇','🦝','🦨','🦡','🐧'];
+const OUTFITS = [
+  {icon:'👕', label:'Футболка'},
+  {icon:'🧥', label:'Хүрэм'},
+  {icon:'👔', label:'Костюм'},
+  {icon:'👗', label:'Даашинз'},
+  {icon:'🥋', label:'Кимоно'},
+  {icon:'🦸', label:'Нөмрөг'},
+  {icon:'🎓', label:'Малгай'},
+  {icon:'👑', label:'Титэм'},
+  {icon:'🕶️', label:'Шил'},
+  {icon:'🎒', label:'Цүнх'}
+];
 const COLORS  = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899'];
 const MEDALS  = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
 const ANS_LBL = ['A','B','C','D'];
@@ -548,6 +599,7 @@ let currentUser = null;
 let sessionId   = null;
 let studentId   = null;
 let myAvatar    = AVATARS[0];
+let myOutfit    = OUTFITS[0].icon;
 let myColor     = COLORS[0];
 let editSetId   = null;
 let qCount      = 10;
@@ -813,10 +865,16 @@ async function startSession(setId) {
 }
 
 function openLobby() {
-  // Build QR
+  // Build QR with compact Firebase config for faster scanning
   ge('qr-box').innerHTML = '';
-  const cfg = localStorage.getItem('fb-cfg');
-  const b64 = btoa(unescape(encodeURIComponent(cfg)));
+  const rawCfg = JSON.parse(localStorage.getItem('fb-cfg') || '{}');
+  const minCfg = {
+    apiKey: rawCfg.apiKey,
+    authDomain: rawCfg.authDomain,
+    databaseURL: rawCfg.databaseURL,
+    projectId: rawCfg.projectId
+  };
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(minCfg))));
   const url  = `${location.origin}${location.pathname}?join=${sessionId}&cfg=${encodeURIComponent(b64)}`;
   ge('join-url-txt').textContent = url;
   try {
@@ -837,7 +895,7 @@ function openLobby() {
       : `${cnt} суралцагч бэлэн — эхлүүлж болно`;
     ge('lobby-empty').style.display = cnt?'none':'';
     ge('lobby-students').innerHTML = Object.values(sts).map(s=>`
-      <div class="s-chip" style="border-color:${s.color};color:${s.color}">${s.avatar} ${esc(s.name)}</div>
+      <div class="s-chip" style="border-color:${s.color};color:${s.color}">${s.avatar}${s.outfit||''} ${esc(s.name)}</div>
     `).join('');
   };
   lobRef.on('value', lobCb);
@@ -886,6 +944,7 @@ function renderTGame(s) {
   ge('tg-qtext').textContent   = q.text;
   ge('tg-prog').style.width    = `${(qi+1)/total*100}%`;
   ge('tg-answered').textContent= `${nAns} / ${nSt} хариулсан`;
+  ge('tg-next-btn').textContent = qi+1 >= total ? '🏁 Дүн харах' : 'Дараагийн →';
 
   ge('tg-options').innerHTML = q.options.map((opt,i)=>`
     <div class="ans-btn ans-${ANS_LBL[i]} ${i===q.correct?'teacher-correct':''}" style="pointer-events:none">
@@ -899,12 +958,27 @@ function renderTGame(s) {
   ge('tg-nwrong').textContent   = wr;
   ge('tg-nnone').textContent    = nSt - nAns;
 
-  // Mini leaderboard top 5
+  // Mini leaderboard top 5 + Race track
   const ranked = Object.entries(sts).map(([id,s])=>({...s,id})).sort((a,b)=>b.score-a.score).slice(0,5);
+  const maxPossible = Math.max(60, total * 60);
+  ge('tg-race-track').innerHTML = ranked.map(s=>{
+    const pct = Math.min(82, Math.round((s.score / maxPossible) * 82));
+    return `
+      <div class="race-lane">
+        <div class="race-fill" style="width:${Math.max(6, pct+18)}%;background:${s.color}"></div>
+        <div class="race-runner" style="margin-left:${pct}%;color:${s.color}">
+          <span>${s.avatar}${s.outfit||''}</span>
+          <span>${esc(s.name)}</span>
+        </div>
+        <div class="race-score">${s.score}</div>
+      </div>
+    `;
+  }).join('') || '<p class="muted center">Суралцагч алга</p>';
+
   ge('tg-mini-lb').innerHTML = ranked.map((s,i)=>`
     <div class="lb-row">
       <div class="lb-rank">${MEDALS[i]||(i+1)}</div>
-      <div class="lb-avatar">${s.avatar}</div>
+      <div class="lb-avatar">${s.avatar}${s.outfit||''}</div>
       <div class="lb-info"><div class="lb-name" style="color:${s.color}">${esc(s.name)}</div></div>
       <div class="lb-pts">${s.score}</div>
     </div>
@@ -935,20 +1009,38 @@ async function nextQuestion() {
   }
 }
 
+function renderPodium(ranked) {
+  if (!ranked.length) return '';
+  const top = [ranked[1], ranked[0], ranked[2]].filter(Boolean);
+  return `<div class="podium">${top.map(x => {
+    const r = ranked.indexOf(x) + 1;
+    return `
+      <div class="pod-col pod-${r}">
+        <div style="font-size:1.8rem">${MEDALS[r-1]}</div>
+        <div style="font-size:2.4rem;margin:4px 0">${x.avatar}${x.outfit||''}</div>
+        <div style="font-weight:800;color:${x.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.name)}</div>
+        <div style="font-size:1.3rem;font-weight:800;color:#6366f1;margin-top:4px">${x.score} оноо</div>
+      </div>`;
+  }).join('')}</div>`;
+}
+
 function renderTResults(s) {
   const sts = s.students||{};
   const ranked = Object.entries(sts).map(([id,x])=>({...x,id})).sort((a,b)=>b.score-a.score);
-  ge('t-final-lb').innerHTML = ranked.length ? ranked.map((x,i)=>`
-    <div class="lb-row">
-      <div class="lb-rank">${MEDALS[i]||(i+1)}</div>
-      <div class="lb-avatar">${x.avatar}</div>
-      <div class="lb-info">
-        <div class="lb-name" style="color:${x.color}">${esc(x.name)}</div>
-        <div class="lb-sub">Нийт ${x.score} оноо</div>
+  ge('t-final-lb').innerHTML = ranked.length ? (
+    renderPodium(ranked) +
+    ranked.map((x,i)=>`
+      <div class="lb-row">
+        <div class="lb-rank">${MEDALS[i]||(i+1)}</div>
+        <div class="lb-avatar">${x.avatar}${x.outfit||''}</div>
+        <div class="lb-info">
+          <div class="lb-name" style="color:${x.color}">${esc(x.name)}</div>
+          <div class="lb-sub">${i+1}-р байр · Нийт ${x.score} оноо</div>
+        </div>
+        <div class="lb-pts">${x.score}</div>
       </div>
-      <div class="lb-pts">${x.score}</div>
-    </div>
-  `).join('') : '<p class="muted center">Оролцогч байхгүй байна</p>';
+    `).join('')
+  ) : '<p class="muted center">Оролцогч байхгүй байна</p>';
 }
 
 // ═══════════════════════════════
@@ -960,15 +1052,33 @@ function buildJoinView() {
     <span class="av-opt ${i===0?'sel':''}" onclick="pickAv(this,'${a}')">${a}</span>
   `).join('');
   myAvatar = AVATARS[0];
+  // Outfits
+  ge('out-grid').innerHTML = OUTFITS.map((o,i)=>`
+    <span class="out-opt ${i===0?'sel':''}" onclick="pickOut(this,'${o.icon}','${o.label}')">${o.icon} ${o.label}</span>
+  `).join('');
+  myOutfit = OUTFITS[0].icon;
   // Colors
   ge('col-grid').innerHTML = COLORS.map((c,i)=>`
     <div class="col-opt ${i===0?'sel':''}" style="background:${c}" onclick="pickCol(this,'${c}')"></div>
   `).join('');
   myColor = COLORS[0];
+  updatePreview();
 }
 
-function pickAv(el,a){ document.querySelectorAll('.av-opt').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); myAvatar=a; }
-function pickCol(el,c){ document.querySelectorAll('.col-opt').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); myColor=c; }
+function updatePreview() {
+  const name = v('s-name') || 'Тоглогч';
+  ge('pv-av').textContent = myAvatar;
+  ge('pv-out').textContent = myOutfit;
+  ge('pv-name').textContent = name;
+  ge('pv-name').style.color = myColor;
+  ge('pv-badge').style.borderColor = myColor;
+  ge('pv-badge').style.background = myColor + '22';
+  ge('char-preview').style.borderColor = myColor;
+}
+
+function pickAv(el,a){ document.querySelectorAll('.av-opt').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); myAvatar=a; updatePreview(); }
+function pickOut(el,o,lbl){ document.querySelectorAll('.out-opt').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); myOutfit=o; ge('pv-out-lbl').textContent=lbl; updatePreview(); }
+function pickCol(el,c){ document.querySelectorAll('.col-opt').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); myColor=c; updatePreview(); }
 
 async function studentJoin() {
   const name = v('s-name');
@@ -988,11 +1098,11 @@ async function studentJoin() {
   sessionStorage.setItem('sid', studentId);
 
   await db.ref(`sessions/${sessionId}/students/${studentId}`).set({
-    name, avatar:myAvatar, color:myColor, score:0, at:Date.now()
+    name, avatar:myAvatar, outfit:myOutfit, color:myColor, score:0, at:Date.now()
   });
 
   myScore = 0; lastQIdx = -1; answered = false;
-  ge('sw-avatar').textContent = myAvatar;
+  ge('sw-avatar').textContent = myAvatar + myOutfit;
   ge('sw-name').textContent   = name;
   watchStudentSession();
   showView('v-swait');
@@ -1120,7 +1230,7 @@ function renderStudentResults(s) {
   const ranked=Object.entries(sts).map(([id,x])=>({...x,id})).sort((a,b)=>b.score-a.score);
   const myRank=ranked.findIndex(x=>x.id===studentId)+1;
 
-  ge('sr-avatar').textContent=me.avatar||'🏆';
+  ge('sr-avatar').textContent=(me.avatar||'🏆')+(me.outfit||'');
   ge('sr-name').textContent  =me.name||'';
   ge('sr-score').textContent =me.score||0;
 
@@ -1128,10 +1238,10 @@ function renderStudentResults(s) {
   rEl.textContent=`${MEDALS[myRank-1]||(myRank+'р')} ${myRank}-р байр`;
   rEl.className=`badge ${myRank===1?'badge-gold':myRank<=3?'badge-green':'badge-blue'}`;
 
-  ge('sr-lb').innerHTML=ranked.map((x,i)=>`
+  ge('sr-lb').innerHTML=renderPodium(ranked)+ranked.map((x,i)=>`
     <div class="lb-row ${x.id===studentId?'me':''}">
       <div class="lb-rank">${MEDALS[i]||(i+1)}</div>
-      <div class="lb-avatar">${x.avatar}</div>
+      <div class="lb-avatar">${x.avatar}${x.outfit||''}</div>
       <div class="lb-info">
         <div class="lb-name" style="color:${x.color}">${esc(x.name)}${x.id===studentId?' 👈':''}
         </div>
@@ -1155,15 +1265,29 @@ async function rejoinAsStudent() {
   currentSession=s;
 
   if (s.status==='lobby') {
-    ge('sw-avatar').textContent=me.avatar;
+    ge('sw-avatar').textContent=me.avatar+(me.outfit||'');
     ge('sw-name').textContent  =me.name;
     watchStudentSession(); showView('v-swait');
   } else if (s.status==='playing') {
-    // Check if already answered this question
     const qi=s.cq;
     const myAns=(s.answers&&s.answers[qi]&&s.answers[qi][studentId]);
-    if (myAns) { answered=true; lastQIdx=qi; }
-    watchStudentSession(); renderStudentGame(s); showView('v-sgame');
+    renderStudentGame(s);
+    if (myAns) {
+      answered=true; clearTimers();
+      const q=s.questions[qi];
+      document.querySelectorAll('#sg-options .ans-btn').forEach((b,i)=>{
+        b.disabled=true;
+        if(i===q.correct) b.classList.add('correct');
+        else if(i===myAns.answer&&!myAns.correct) b.classList.add('wrong');
+        else b.classList.add('dimmed');
+      });
+      ge('sf-icon').textContent   = myAns.correct?'✅':(myAns.answer===-1?'⏰':'❌');
+      ge('sf-title').textContent  = myAns.correct?'Зөв хариулт!':(myAns.answer===-1?'Хугацаа дууслаа!':'Буруу хариулт');
+      ge('sf-pts').textContent    = myAns.correct?`+${myAns.points} оноо`:'0 оноо';
+      ge('sf-correct').textContent= `Зөв хариулт: ${ANS_LBL[q.correct]}. ${q.options[q.correct]}`;
+      ge('sg-feedback').style.display='';
+    }
+    watchStudentSession(); showView('v-sgame');
   } else if (s.status==='finished') {
     renderStudentResults(s); showView('v-sresults');
   } else {
