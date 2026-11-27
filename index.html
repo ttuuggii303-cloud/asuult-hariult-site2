@@ -294,43 +294,58 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
     <span class="hero-icon">🏆</span>
     <h1>Асуулт Уралдаан</h1>
     <p class="muted" style="margin-bottom:20px">Багш асуулт тавьж, хүүхдүүд 60 секундын уралдаанд өрсөлдөнө!</p>
-    <button class="btn btn-primary btn-full btn-lg" onclick="showView('v-auth')">👩‍🏫 Багшаар нэвтрэх</button>
+    <button class="btn btn-primary btn-full btn-lg" onclick="goToAuth('teacher')">👩‍🏫 Багшаар нэвтрэх / бүртгүүлэх</button>
+    <button class="btn btn-full btn-lg" style="margin-bottom:10px" onclick="goToAuth('student')">🎓 Сурагчаар нэвтрэх / бүртгүүлэх</button>
     <div class="sep"></div>
-    <p class="muted" style="font-size:.85rem">📱 Хүүхдүүд QR код уншиж нэвтэрнэ</p>
+    <p class="muted" style="font-size:.85rem">📱 Хүүхдүүд QR код уншиж уралдаанд нэгдэнэ</p>
     <button class="btn btn-sm" style="margin-top:8px" onclick="showView('v-setup')">🔧 Firebase тохиргоо</button>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════
-     AUTH — Багш нэвтрэх / бүртгүүлэх
+     AUTH — Нэвтрэх / Бүртгүүлэх (Багш & Сурагч)
 ══════════════════════════════════════════════════ -->
 <div id="v-auth" class="view">
   <button class="btn btn-sm back-btn" onclick="showView('v-landing')">← Буцах</button>
-  <div class="card">
-    <h2 class="center">Багш нэвтрэх</h2>
+  <div class="card" style="max-width:440px">
+
+    <!-- Role selector: Teacher / Student -->
+    <div class="tabs" style="margin-bottom:12px">
+      <div class="tab active" id="role-tab-teacher" onclick="switchRole('teacher')">👩‍🏫 Багш</div>
+      <div class="tab" id="role-tab-student" onclick="switchRole('student')">🎓 Сурагч</div>
+    </div>
+
+    <!-- Mode selector: Login / Register -->
     <div class="tabs">
       <div class="tab active" id="tab-login" onclick="switchTab('login')">Нэвтрэх</div>
       <div class="tab" id="tab-reg" onclick="switchTab('reg')">Бүртгүүлэх</div>
     </div>
-    <!-- Login -->
+
+    <div id="auth-role-label" style="text-align:center;color:#7a85a3;font-size:.82rem;margin-bottom:12px">
+      Багшийн эрхээр нэвтэрч байна
+    </div>
+
+    <!-- ── LOGIN FORM ── -->
     <div id="auth-login">
-      <label>И-мэйл</label>
-      <input id="l-email" type="email" placeholder="bagsh@school.mn">
+      <label>Утасны дугаар</label>
+      <input id="l-phone" type="tel" placeholder="99xxxxxx" maxlength="12">
       <label>Нууц үг</label>
       <input id="l-pass" type="password" placeholder="••••••••">
-      <button class="btn btn-primary btn-full" onclick="doLogin()">Нэвтрэх →</button>
+      <button class="btn btn-primary btn-full" onclick="doPhoneLogin()">Нэвтрэх →</button>
     </div>
-    <!-- Register -->
+
+    <!-- ── REGISTER FORM ── -->
     <div id="auth-reg" style="display:none">
       <label>Таны нэр</label>
-      <input id="r-name" placeholder="Дорж багш">
-      <label>И-мэйл</label>
-      <input id="r-email" type="email" placeholder="bagsh@school.mn">
+      <input id="r-name" placeholder="Жишээ: Дорж багш">
+      <label>Утасны дугаар</label>
+      <input id="r-phone" type="tel" placeholder="99xxxxxx" maxlength="12">
       <label>Нууц үг (хамгийн багадаа 6 тэмдэгт)</label>
       <input id="r-pass" type="password" placeholder="••••••••">
-      <button class="btn btn-primary btn-full" onclick="doRegister()">Бүртгүүлэх →</button>
+      <button class="btn btn-success btn-full" onclick="doPhoneRegister()">Бүртгүүлэх →</button>
     </div>
-    <p id="auth-err" style="color:#ef4444;text-align:center;display:none;margin-top:4px"></p>
+
+    <p id="auth-err" style="color:#ef4444;text-align:center;display:none;margin-top:6px;font-size:.9rem"></p>
   </div>
 </div>
 
@@ -595,7 +610,8 @@ const ANS_LBL = ['A','B','C','D'];
 // GLOBAL STATE
 // ═══════════════════════════════
 let db = null, auth = null;
-let currentUser = null;
+let currentUser  = null;   // Firebase user (teacher sessions)
+let currentAccount = null; // phone-based local account {phone, name, role}
 let sessionId   = null;
 let studentId   = null;
 let myAvatar    = AVATARS[0];
@@ -631,11 +647,6 @@ function initFB(cfg) {
   if (!firebase.apps.length) firebase.initializeApp(cfg);
   db   = firebase.database();
   auth = firebase.auth();
-  auth.onAuthStateChanged(u => {
-    currentUser = u;
-    if (u && !sessionId) { loadDashboard(); showView('v-dashboard'); }
-    else if (!u && !sessionId) showView('v-landing');
-  });
 }
 
 // ═══════════════════════════════
@@ -647,7 +658,7 @@ function init() {
   const cfg64 = p.get('cfg');
 
   if (jid && cfg64) {
-    // === STUDENT path ===
+    // === STUDENT path via QR ===
     try {
       const cfg = JSON.parse(atob(decodeURIComponent(cfg64)));
       initFB(cfg);
@@ -659,11 +670,27 @@ function init() {
     return;
   }
 
-  // === TEACHER path ===
-  const saved = localStorage.getItem('fb-cfg');
-  if (!saved) { showView('v-setup'); return; }
-  try { initFB(JSON.parse(saved)); showView('v-landing'); }
-  catch(e)  { showView('v-setup'); }
+  // === Normal path: check local session ===
+  const sess = getSession();
+  if (sess) {
+    currentAccount = sess;
+    if (sess.role === 'teacher') {
+      const saved = localStorage.getItem('fb-cfg');
+      if (!saved) { showView('v-setup'); return; }
+      try { initFB(JSON.parse(saved)); loadDashboard(); showView('v-dashboard'); }
+      catch(e) { showView('v-setup'); }
+    } else {
+      // Student logged in — go to landing to scan QR
+      showView('v-landing');
+    }
+  } else {
+    // Not logged in — check Firebase config exists for teacher view
+    const saved = localStorage.getItem('fb-cfg');
+    if (saved) {
+      try { initFB(JSON.parse(saved)); } catch(e) {}
+    }
+    showView('v-landing');
+  }
 }
 
 // ═══════════════════════════════
@@ -673,12 +700,35 @@ function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
+function goToAuth(role) {
+  authRole = role;
+  // update role tabs when auth view opens
+  showView('v-auth');
+  setTimeout(() => switchRole(role), 10);
+}
+// Current auth role: 'teacher' | 'student'
+let authRole = 'teacher';
+
+function switchRole(r) {
+  authRole = r;
+  ['teacher','student'].forEach(x =>
+    ge('role-tab-'+x).classList.toggle('active', x===r)
+  );
+  const labels = {
+    teacher: 'Багшийн эрхээр нэвтэрч байна',
+    student: 'Сурагчийн эрхээр нэвтэрч байна'
+  };
+  ge('auth-role-label').textContent = labels[r];
+  // reset to login tab
+  switchTab('login');
+}
+
 function switchTab(t) {
   ['login','reg'].forEach(x => {
-    document.getElementById('auth-'+x).style.display = x===t ? '' : 'none';
-    document.getElementById('tab-'+x).classList.toggle('active', x===t);
+    ge('auth-'+x).style.display = x===t ? '' : 'none';
+    ge('tab-'+x).classList.toggle('active', x===t);
   });
-  document.getElementById('auth-err').style.display='none';
+  ge('auth-err').style.display='none';
 }
 
 // ═══════════════════════════════
@@ -692,57 +742,119 @@ function toast(msg, col='#22c55e') {
 }
 
 // ═══════════════════════════════
-// TEACHER AUTH
+// PHONE-BASED LOCAL AUTH
+// key: 'qs-users' → { [phone]: {name, role, passHash} }
+// session: 'qs-session' → {phone, name, role}
 // ═══════════════════════════════
-async function doRegister() {
-  const name = v('r-name'), email = v('r-email'), pass = v('r-pass');
-  const err = ge('auth-err');
-  if (!name||!email||!pass) { showErr(err,'Бүх талбарыг бөглөнэ үү'); return; }
-  try {
-    err.style.display='none';
-    const c = await auth.createUserWithEmailAndPassword(email, pass);
-    await db.ref(`teachers/${c.user.uid}`).set({ name, email, at: Date.now() });
-    toast('Бүртгэл амжилттай! 🎉');
-  } catch(e) { showErr(err, fbErr(e)); }
+function hashPass(p) {
+  // simple djb2 — not for production, fine for local quiz app
+  let h = 5381;
+  for (let i=0;i<p.length;i++) h=((h<<5)+h)+p.charCodeAt(i);
+  return (h>>>0).toString(36);
 }
 
-async function doLogin() {
-  const email = v('l-email'), pass = v('l-pass');
-  const err = ge('auth-err');
-  if (!email||!pass) { showErr(err,'И-мэйл болон нууц үгийг бөглөнэ үү'); return; }
-  try {
-    err.style.display='none';
-    await auth.signInWithEmailAndPassword(email, pass);
-  } catch(e) { showErr(err, fbErr(e)); }
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem('qs-users')||'{}'); } catch(e) { return {}; }
+}
+function saveUsers(u) { localStorage.setItem('qs-users', JSON.stringify(u)); }
+
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('qs-session')||'null'); } catch(e) { return null; }
+}
+function saveSession(s) { localStorage.setItem('qs-session', JSON.stringify(s)); }
+function clearSession() { localStorage.removeItem('qs-session'); }
+
+function showAuthErr(msg) {
+  const el = ge('auth-err');
+  el.textContent = msg;
+  el.style.display = 'block';
 }
 
-async function doLogout() {
+function doPhoneRegister() {
+  const name = (ge('r-name').value||'').trim();
+  const phone = (ge('r-phone').value||'').replace(/\s/g,'');
+  const pass  = (ge('r-pass').value||'');
+  const err = ge('auth-err');
+  err.style.display='none';
+
+  if (!name)              return showAuthErr('Нэрээ оруулна уу');
+  if (!phone||phone.length<8) return showAuthErr('Утасны дугаараа зөв оруулна уу');
+  if (pass.length < 6)   return showAuthErr('Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой');
+
+  const users = getUsers();
+  if (users[phone] && users[phone].role !== authRole) {
+    return showAuthErr(authRole==='teacher'
+      ? 'Энэ дугаар сурагчаар бүртгэлтэй байна'
+      : 'Энэ дугаар багшаар бүртгэлтэй байна');
+  }
+  if (users[phone] && users[phone].role === authRole) {
+    return showAuthErr('Энэ дугаар аль хэдийн бүртгэлтэй. Нэвтрэх таб ашиглана уу.');
+  }
+
+  users[phone] = { name, role: authRole, passHash: hashPass(pass) };
+  saveUsers(users);
+  const session = { phone, name, role: authRole };
+  saveSession(session);
+  currentAccount = session;
+  toast('Бүртгэл амжилттай! 🎉');
+  onAuthSuccess();
+}
+
+function doPhoneLogin() {
+  const phone = (ge('l-phone').value||'').replace(/\s/g,'');
+  const pass  = (ge('l-pass').value||'');
+  const err = ge('auth-err');
+  err.style.display='none';
+
+  if (!phone) return showAuthErr('Утасны дугаараа оруулна уу');
+  if (!pass)  return showAuthErr('Нууц үгийг оруулна уу');
+
+  const users = getUsers();
+  const user  = users[phone];
+  if (!user) return showAuthErr('Энэ дугаар бүртгэлгүй байна');
+  if (user.role !== authRole)
+    return showAuthErr(authRole==='teacher'
+      ? 'Энэ дугаар сурагчаар бүртгэлтэй байна'
+      : 'Энэ дугаар багшаар бүртгэлтэй байна');
+  if (user.passHash !== hashPass(pass)) return showAuthErr('Нууц үг буруу байна');
+
+  const session = { phone, name: user.name, role: authRole };
+  saveSession(session);
+  currentAccount = session;
+  toast(`Тавтай морил, ${user.name}! 👋`);
+  onAuthSuccess();
+}
+
+function doLogout() {
   clearAll();
-  await auth.signOut();
+  clearSession();
+  currentAccount = null;
   showView('v-landing');
 }
 
-function fbErr(e) {
-  const m = {
-    'auth/user-not-found':'И-мэйл бүртгэлгүй',
-    'auth/wrong-password':'Нууц үг буруу',
-    'auth/invalid-credential':'И-мэйл эсвэл нууц үг буруу',
-    'auth/email-already-in-use':'И-мэйл аль хэдийн бүртгэлтэй',
-    'auth/weak-password':'Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой',
-    'auth/invalid-email':'И-мэйл буруу форматтай',
-  };
-  return m[e.code] || e.message;
+function onAuthSuccess() {
+  if (currentAccount.role === 'teacher') {
+    // Teacher needs Firebase for sessions — check setup
+    const saved = localStorage.getItem('fb-cfg');
+    if (!saved) { showView('v-setup'); return; }
+    try { if (!firebase.apps.length || !db) initFB(JSON.parse(saved)); }
+    catch(e) { showView('v-setup'); return; }
+    loadDashboard(); showView('v-dashboard');
+  } else {
+    // Student: go to landing (they join via QR)
+    showView('v-landing');
+    toast('Сурагч нэвтэрлээ! QR кодоор уралдаанд нэгдэнэ үү 📱');
+  }
 }
 
 // ═══════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════
 async function loadDashboard() {
-  if (!currentUser) return;
-  const tSnap = await db.ref(`teachers/${currentUser.uid}/name`).get();
-  ge('dash-welcome').textContent = `Сайн байна уу, ${tSnap.val()||'багш'} 👋`;
+  if (!currentAccount) return;
+  ge('dash-welcome').textContent = `Сайн байна уу, ${currentAccount.name||'багш'} 👋`;
 
-  const snap = await db.ref(`teachers/${currentUser.uid}/sets`).get();
+  const snap = await db.ref(`teachers/${currentAccount.phone}/sets`).get();
   const sets = snap.val() || {};
   const list = ge('set-list');
   const entries = Object.entries(sets).sort((a,b)=>b[1].at-a[1].at);
@@ -770,7 +882,7 @@ function goToDash() { clearAll(); loadDashboard(); showView('v-dashboard'); }
 
 async function delSet(id) {
   if (!confirm('Устгах уу?')) return;
-  await db.ref(`teachers/${currentUser.uid}/sets/${id}`).remove();
+  await db.ref(`teachers/${currentAccount.phone}/sets/${id}`).remove();
   loadDashboard(); toast('Устгасан','#ef4444');
 }
 
@@ -781,7 +893,7 @@ function openEditor(setId) {
   editSetId = setId; editQs = []; qCount = 10;
   ge('set-title').value = '';
   if (setId) {
-    db.ref(`teachers/${currentUser.uid}/sets/${setId}`).get().then(snap=>{
+    db.ref(`teachers/${currentAccount.phone}/sets/${setId}`).get().then(snap=>{
       const s = snap.val(); if (!s) return;
       ge('set-title').value = s.title;
       qCount = s.count;
@@ -830,7 +942,7 @@ async function saveSet() {
     if (q.options.some(o=>!o.trim())) { alert(`${i+1}-р асуултын бүх хариулт (A,B,C,D) бичнэ үү`); return; }
   }
   const id = editSetId || db.ref().push().key;
-  await db.ref(`teachers/${currentUser.uid}/sets/${id}`).set({
+  await db.ref(`teachers/${currentAccount.phone}/sets/${id}`).set({
     title, count: qCount, at: Date.now(),
     questions: editQs.slice(0,qCount)
   });
@@ -843,18 +955,17 @@ async function saveSet() {
 // SESSION
 // ═══════════════════════════════
 async function startSession(setId) {
-  const setSnap = await db.ref(`teachers/${currentUser.uid}/sets/${setId}`).get();
+  const setSnap = await db.ref(`teachers/${currentAccount.phone}/sets/${setId}`).get();
   const set = setSnap.val();
   if (!set) { alert('Багц олдсонгүй'); return; }
-  const tNameSnap = await db.ref(`teachers/${currentUser.uid}/name`).get();
 
   sessionId = db.ref('sessions').push().key;
   await db.ref(`sessions/${sessionId}`).set({
-    tid: currentUser.uid,
-    tname: tNameSnap.val()||'Багш',
+    tid: currentAccount.phone,
+    tname: currentAccount.name||'Багш',
     status: 'lobby',
     cq: -1,
-    qst: 0,         // question start time
+    qst: 0,
     total: set.count,
     questions: set.questions,
     students: {},
