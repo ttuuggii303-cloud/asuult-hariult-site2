@@ -743,15 +743,17 @@ function toast(msg, col='#22c55e') {
 
 // ═══════════════════════════════
 // PHONE-BASED LOCAL AUTH
-// key: 'qs-users' → { [phone]: {name, role, passHash} }
+// key: 'qs-users' → { ["phone_role"]: {name, phone, role, passHash} }
+//   e.g. "91750115_teacher" and "91750115_student" are independent accounts
 // session: 'qs-session' → {phone, name, role}
 // ═══════════════════════════════
 function hashPass(p) {
-  // simple djb2 — not for production, fine for local quiz app
   let h = 5381;
   for (let i=0;i<p.length;i++) h=((h<<5)+h)+p.charCodeAt(i);
   return (h>>>0).toString(36);
 }
+
+function userKey(phone, role) { return phone + '_' + role; }
 
 function getUsers() {
   try { return JSON.parse(localStorage.getItem('qs-users')||'{}'); } catch(e) { return {}; }
@@ -771,28 +773,26 @@ function showAuthErr(msg) {
 }
 
 function doPhoneRegister() {
-  const name = (ge('r-name').value||'').trim();
+  const name  = (ge('r-name').value||'').trim();
   const phone = (ge('r-phone').value||'').replace(/\s/g,'');
   const pass  = (ge('r-pass').value||'');
-  const err = ge('auth-err');
-  err.style.display='none';
+  ge('auth-err').style.display = 'none';
 
-  if (!name)              return showAuthErr('Нэрээ оруулна уу');
+  if (!name)               return showAuthErr('Нэрээ оруулна уу');
   if (!phone||phone.length<8) return showAuthErr('Утасны дугаараа зөв оруулна уу');
-  if (pass.length < 6)   return showAuthErr('Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой');
+  if (pass.length < 6)    return showAuthErr('Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой');
 
   const users = getUsers();
-  if (users[phone] && users[phone].role !== authRole) {
-    return showAuthErr(authRole==='teacher'
-      ? 'Энэ дугаар сурагчаар бүртгэлтэй байна'
-      : 'Энэ дугаар багшаар бүртгэлтэй байна');
-  }
-  if (users[phone] && users[phone].role === authRole) {
-    return showAuthErr('Энэ дугаар аль хэдийн бүртгэлтэй. Нэвтрэх таб ашиглана уу.');
+  const key   = userKey(phone, authRole);
+
+  if (users[key]) {
+    return showAuthErr('Энэ дугаар ' + (authRole==='teacher'?'багшаар':'сурагчаар') + ' аль хэдийн бүртгэлтэй. Нэвтрэх таб ашиглана уу.');
   }
 
-  users[phone] = { name, role: authRole, passHash: hashPass(pass) };
+  // Same phone allowed for different roles — stored under separate keys
+  users[key] = { name, phone, role: authRole, passHash: hashPass(pass) };
   saveUsers(users);
+
   const session = { phone, name, role: authRole };
   saveSession(session);
   currentAccount = session;
@@ -803,25 +803,22 @@ function doPhoneRegister() {
 function doPhoneLogin() {
   const phone = (ge('l-phone').value||'').replace(/\s/g,'');
   const pass  = (ge('l-pass').value||'');
-  const err = ge('auth-err');
-  err.style.display='none';
+  ge('auth-err').style.display = 'none';
 
   if (!phone) return showAuthErr('Утасны дугаараа оруулна уу');
   if (!pass)  return showAuthErr('Нууц үгийг оруулна уу');
 
   const users = getUsers();
-  const user  = users[phone];
-  if (!user) return showAuthErr('Энэ дугаар бүртгэлгүй байна');
-  if (user.role !== authRole)
-    return showAuthErr(authRole==='teacher'
-      ? 'Энэ дугаар сурагчаар бүртгэлтэй байна'
-      : 'Энэ дугаар багшаар бүртгэлтэй байна');
+  const key   = userKey(phone, authRole);
+  const user  = users[key];
+
+  if (!user) return showAuthErr('Энэ дугаар ' + (authRole==='teacher'?'багшаар':'сурагчаар') + ' бүртгэлгүй байна');
   if (user.passHash !== hashPass(pass)) return showAuthErr('Нууц үг буруу байна');
 
   const session = { phone, name: user.name, role: authRole };
   saveSession(session);
   currentAccount = session;
-  toast(`Тавтай морил, ${user.name}! 👋`);
+  toast('Тавтай морил, ' + user.name + '! 👋');
   onAuthSuccess();
 }
 
