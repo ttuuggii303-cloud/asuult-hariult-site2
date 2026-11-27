@@ -294,8 +294,20 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
     <span class="hero-icon">🏆</span>
     <h1>Асуулт Уралдаан</h1>
     <p class="muted" style="margin-bottom:20px">Багш асуулт тавьж, хүүхдүүд 60 секундын уралдаанд өрсөлдөнө!</p>
-    <button class="btn btn-primary btn-full btn-lg" onclick="goToAuth('teacher')">👩‍🏫 Багшаар нэвтрэх / бүртгүүлэх</button>
-    <button class="btn btn-full btn-lg" style="margin-bottom:10px" onclick="goToAuth('student')">🎓 Сурагчаар нэвтрэх / бүртгүүлэх</button>
+
+    <!-- Shown when student is logged in -->
+    <div id="land-student-bar" style="display:none;margin-bottom:12px;background:#1a1a40;border:1px solid #6366f1;border-radius:12px;padding:12px 16px">
+      <div style="font-weight:700;margin-bottom:8px" id="land-student-name">🎓 Сурагч</div>
+      <button class="btn btn-primary btn-full" onclick="goToStudentDash()">📊 Миний амжилт харах</button>
+      <button class="btn btn-sm btn-full" style="margin-bottom:0" onclick="doLogout()">🚪 Гарах</button>
+    </div>
+
+    <!-- Shown when no one is logged in -->
+    <div id="land-auth-bar">
+      <button class="btn btn-primary btn-full btn-lg" onclick="goToAuth('teacher')">👩‍🏫 Багшаар нэвтрэх / бүртгүүлэх</button>
+      <button class="btn btn-full btn-lg" style="margin-bottom:10px" onclick="goToAuth('student')">🎓 Сурагчаар нэвтрэх / бүртгүүлэх</button>
+    </div>
+
     <div class="sep"></div>
     <p class="muted" style="font-size:.85rem">📱 Хүүхдүүд QR код уншиж уралдаанд нэгдэнэ</p>
     <button class="btn btn-sm" style="margin-top:8px" onclick="showView('v-setup')">🔧 Firebase тохиргоо</button>
@@ -373,7 +385,12 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
     </div>
 
     <!-- History list -->
-    <h3>📋 Уралдааны түүх</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <h3 style="margin:0">📋 Уралдааны түүх</h3>
+      <select id="sd-lesson-filter" onchange="renderStudentHistory()" style="width:auto;min-width:190px;margin:0;padding:8px 12px;font-size:.9rem">
+        <option value="__all__">📚 Бүх хичээл</option>
+      </select>
+    </div>
     <div id="sdash-list"><p class="muted center" style="padding:24px 0">Одоогоор уралдаанд оролцоогүй байна.<br>QR уншиж уралдаанд нэгдэнэ үү!</p></div>
   </div>
 </div>
@@ -713,7 +730,8 @@ function init() {
       try { initFB(JSON.parse(saved)); loadDashboard(); showView('v-dashboard'); }
       catch(e) { showView('v-setup'); }
     } else {
-      // Student logged in — go to student dashboard
+      // Student logged in — go straight to student achievements dashboard
+      currentAccount = sess;
       loadStudentDashboard();
       showView('v-sdash');
     }
@@ -733,6 +751,18 @@ function init() {
 function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // Update landing page based on login state
+  if (id === 'v-landing') {
+    const sess = currentAccount || getSession();
+    const isStudent = sess && sess.role === 'student';
+    const studentBar = ge('land-student-bar');
+    const authBar    = ge('land-auth-bar');
+    if (studentBar) {
+      studentBar.style.display = isStudent ? '' : 'none';
+      authBar.style.display    = isStudent ? 'none' : '';
+      if (isStudent) ge('land-student-name').textContent = '🎓 ' + sess.name + ' (' + sess.phone + ')';
+    }
+  }
 }
 function goToAuth(role) {
   authRole = role;
@@ -872,7 +902,7 @@ function onAuthSuccess() {
     catch(e) { showView('v-setup'); return; }
     loadDashboard(); showView('v-dashboard');
   } else {
-    // Student: go to student dashboard
+    // Student: go straight to achievements dashboard
     loadStudentDashboard();
     showView('v-sdash');
   }
@@ -881,15 +911,34 @@ function onAuthSuccess() {
 // ═══════════════════════════════
 // STUDENT DASHBOARD
 // ═══════════════════════════════
+function getStudentHistory() {
+  if (!currentAccount) return [];
+  const histKey = 'qs-hist-' + currentAccount.phone;
+  try { return JSON.parse(localStorage.getItem(histKey)||'[]'); } catch(e){ return []; }
+}
+
 function loadStudentDashboard() {
   if (!currentAccount) return;
   ge('sdash-welcome').textContent = `Сайн байна уу, ${currentAccount.name} 👋  •  📞 ${currentAccount.phone}`;
 
-  const histKey = 'qs-hist-' + currentAccount.phone;
-  let hist = [];
-  try { hist = JSON.parse(localStorage.getItem(histKey)||'[]'); } catch(e){}
+  const hist = getStudentHistory();
+  const sel  = ge('sd-lesson-filter');
+  const prevVal = sel ? sel.value : '__all__';
+  if (sel) {
+    const lessons = [...new Set(hist.map(r => r.setName || 'Уралдаан'))];
+    sel.innerHTML = '<option value="__all__">📚 Бүх хичээл (' + hist.length + ')</option>' +
+      lessons.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+    if (lessons.includes(prevVal)) sel.value = prevVal;
+  }
+  renderStudentHistory();
+}
 
-  // Stats
+function renderStudentHistory() {
+  const allHist = getStudentHistory();
+  const selVal  = ge('sd-lesson-filter') ? ge('sd-lesson-filter').value : '__all__';
+  const hist    = selVal === '__all__' ? allHist : allHist.filter(r => (r.setName || 'Уралдаан') === selVal);
+
+  // Stats for selected lesson (or all)
   ge('sd-total').textContent = hist.length;
   if (hist.length) {
     const avg = Math.round(hist.reduce((s,r)=>s+r.score,0)/hist.length);
@@ -907,20 +956,21 @@ function loadStudentDashboard() {
     list.innerHTML = '<p class="muted center" style="padding:24px 0">Одоогоор уралдаанд оролцоогүй байна.<br>QR уншиж уралдаанд нэгдэнэ үү!</p>';
     return;
   }
-  list.innerHTML = hist.map((r,i)=>{
+  list.innerHTML = hist.map(r=>{
     const medal = r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':'🎯';
     const rankCls = r.rank===1?'badge-gold':r.rank<=3?'badge-green':'badge-blue';
     const dt = new Date(r.at).toLocaleString('mn-MN',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    const corTxt = (typeof r.correctCount === 'number' && r.qs) ? ` · ✅ ${r.correctCount}/${r.qs} зөв` : '';
     return `
     <div class="lb-row" style="margin-bottom:8px;flex-wrap:wrap;gap:8px">
       <div class="lb-rank">${medal}</div>
       <div class="lb-info">
         <div class="lb-name">${esc(r.setName||'Уралдаан')}</div>
-        <div class="lb-sub">${dt} · ${r.qs||'?'} асуулт · ${r.total||'?'} оролцогч</div>
+        <div class="lb-sub">${dt} · ${r.qs||'?'} асуулт${corTxt} · ${r.total||'?'} оролцогч</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
         <span class="badge ${rankCls}">${r.rank}-р байр</span>
-        <span class="lb-pts">${r.score}</span>
+        <span class="lb-pts">${r.score} оноо</span>
       </div>
     </div>`;
   }).join('');
@@ -938,23 +988,48 @@ async function loadDashboard() {
   const list = ge('set-list');
   const entries = Object.entries(sets).sort((a,b)=>b[1].at-a[1].at);
 
+  let tHist = {};
+  try { tHist = JSON.parse(localStorage.getItem('qs-thist-' + currentAccount.phone)||'{}'); } catch(e){}
+
   if (!entries.length) {
     list.innerHTML = '<p class="muted center" style="padding:32px 0">Одоогоор багц байхгүй. «Шинэ багц» дарж нэмнэ үү!</p>';
     return;
   }
-  list.innerHTML = entries.map(([id,s])=>`
-    <div class="lb-row" style="margin-bottom:8px">
+  list.innerHTML = entries.map(([id,s])=>{
+    const runs = tHist[id] || [];
+    const last = runs[0];
+    const histLine = last
+      ? `<div class="lb-sub" style="color:#86efac;margin-top:2px">🏆 Өмнөх уралдаан (${runs.length}): ${last.participants} сурагч · Түрүү: ${esc(last.topName)} (${last.topScore} оноо)</div>`
+      : '';
+    return `
+    <div class="lb-row" style="margin-bottom:8px;flex-wrap:wrap">
       <div class="lb-info">
         <div class="lb-name">${esc(s.title)}</div>
         <div class="lb-sub">${s.count} асуулт · ${new Date(s.at).toLocaleDateString('mn-MN')}</div>
+        ${histLine}
       </div>
       <div class="btn-group">
+        ${runs.length ? `<button class="btn btn-sm" onclick="toggleSetHist('${id}')">📊 Дүн</button>` : ''}
         <button class="btn btn-sm" onclick="openEditor('${id}')">✏️</button>
         <button class="btn btn-primary btn-sm" onclick="startSession('${id}')">▶️ Уралдаан</button>
         <button class="btn btn-danger btn-sm" onclick="delSet('${id}')">🗑️</button>
       </div>
-    </div>
-  `).join('');
+      <div id="shist-${id}" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid #252547">
+        ${runs.slice(0,5).map(r=>`
+          <div style="font-size:.82rem;padding:6px 8px;background:#0b0b18;border-radius:8px;margin-bottom:4px">
+            <strong>${new Date(r.at).toLocaleString('mn-MN',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</strong>
+            · ${r.participants} оролцогч
+            · ${r.top.map((p,idx)=>`${MEDALS[idx]||(idx+1)} ${esc(p.name)} (${p.score})`).join(', ')}
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSetHist(id) {
+  const el = ge('shist-'+id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 function goToStudentDash() {
@@ -1046,6 +1121,7 @@ async function startSession(setId) {
   await db.ref(`sessions/${sessionId}`).set({
     tid: currentAccount.phone,
     tname: currentAccount.name||'Багш',
+    setId: setId,
     setTitle: set.title||'Уралдаан',
     status: 'lobby',
     cq: -1,
@@ -1236,6 +1312,26 @@ function renderTResults(s) {
       </div>
     `).join('')
   ) : '<p class="muted center">Оролцогч байхгүй байна</p>';
+
+  // Save teacher race history by setId
+  if (currentAccount && currentAccount.role === 'teacher' && s.setId && ranked.length) {
+    const key = 'qs-thist-' + currentAccount.phone;
+    let tHist = {};
+    try { tHist = JSON.parse(localStorage.getItem(key)||'{}'); } catch(e){}
+    if (!tHist[s.setId]) tHist[s.setId] = [];
+    if (!tHist[s.setId].some(r => r.sid === sessionId)) {
+      tHist[s.setId].unshift({
+        sid: sessionId,
+        at: Date.now(),
+        participants: ranked.length,
+        topName: ranked[0].name,
+        topScore: ranked[0].score,
+        top: ranked.slice(0,5).map(x=>({name:x.name, score:x.score}))
+      });
+      if (tHist[s.setId].length > 20) tHist[s.setId] = tHist[s.setId].slice(0,20);
+      localStorage.setItem(key, JSON.stringify(tHist));
+    }
+  }
 }
 
 // ═══════════════════════════════
@@ -1448,20 +1544,30 @@ function renderStudentResults(s) {
   // ── Save result to student history ──
   const sess = getSession();
   if (sess && sess.role === 'student') {
+    let corCount = 0;
+    if (s.answers) {
+      Object.values(s.answers).forEach(qAns => {
+        if (qAns && qAns[studentId] && qAns[studentId].correct) corCount++;
+      });
+    }
     const histKey = 'qs-hist-' + sess.phone;
     let hist = [];
     try { hist = JSON.parse(localStorage.getItem(histKey)||'[]'); } catch(e){}
-    hist.unshift({
-      lesson : s.tname ? s.tname + ' — хичээл' : 'Уралдаан',
-      setName: s.setTitle || s.tname || 'Уралдаан',
-      score  : me.score||0,
-      rank   : myRank,
-      total  : ranked.length,
-      qs     : s.total||0,
-      at     : Date.now()
-    });
-    if (hist.length > 50) hist = hist.slice(0,50);
-    localStorage.setItem(histKey, JSON.stringify(hist));
+    if (!hist.some(r => r.sid && r.sid === sessionId)) {
+      hist.unshift({
+        sid    : sessionId,
+        lesson : s.tname ? s.tname + ' — хичээл' : 'Уралдаан',
+        setName: s.setTitle || s.tname || 'Уралдаан',
+        score  : me.score||0,
+        rank   : myRank,
+        total  : ranked.length,
+        qs     : s.total||0,
+        correctCount: corCount,
+        at     : Date.now()
+      });
+      if (hist.length > 50) hist = hist.slice(0,50);
+      localStorage.setItem(histKey, JSON.stringify(hist));
+    }
   }
 }
 
