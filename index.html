@@ -324,8 +324,20 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
 
     <!-- Shown when no one is logged in -->
     <div id="land-auth-bar">
-      <button class="btn btn-primary btn-full btn-lg" onclick="goToAuth('teacher')">👩‍🏫 Багшаар нэвтрэх / бүртгүүлэх</button>
-      <button class="btn btn-full btn-lg" style="margin-bottom:10px" onclick="goToAuth('student')">🎓 Сурагчаар нэвтрэх / бүртгүүлэх</button>
+      <div class="tabs" style="margin-bottom:14px">
+        <div class="tab active" id="land-tab-login" onclick="switchLandMode('login')">🔑 Нэвтрэх</div>
+        <div class="tab" id="land-tab-reg" onclick="switchLandMode('reg')">📝 Бүртгүүлэх</div>
+      </div>
+      <div id="land-mode-login">
+        <p class="muted" style="font-size:.85rem;margin-bottom:10px">Аль эрхээр нэвтрэх вэ?</p>
+        <button class="btn btn-primary btn-full btn-lg" onclick="goToAuth('student','login')">🎓 Сурагчаар нэвтрэх</button>
+        <button class="btn btn-full btn-lg" style="margin-bottom:10px" onclick="goToAuth('teacher','login')">👩‍🏫 Багшаар нэвтрэх</button>
+      </div>
+      <div id="land-mode-reg" style="display:none">
+        <p class="muted" style="font-size:.85rem;margin-bottom:10px">Аль эрхээр бүртгүүлэх вэ?</p>
+        <button class="btn btn-success btn-full btn-lg" onclick="goToAuth('student','reg')">🎓 Сурагчаар бүртгүүлэх</button>
+        <button class="btn btn-primary btn-full btn-lg" style="margin-bottom:10px" onclick="goToAuth('teacher','reg')">👩‍🏫 Багшаар бүртгүүлэх</button>
+      </div>
     </div>
 
     <div class="sep" id="land-qr-sep"></div>
@@ -371,8 +383,9 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
       <label>Таны нэр</label>
       <input id="r-name" placeholder="Жишээ: Дорж багш">
       <div id="r-subj-wrap">
-        <label>Ямар хичээлийн багш вэ?</label>
+        <label>Ямар хичээлийн багш вэ? <span style="color:#ef4444">*</span></label>
         <select id="r-subj">
+          <option value="">-- Хичээлээ заавал сонгоно уу --</option>
           <option value="math">📐 Математикийн багш</option>
           <option value="mn">📖 Монгол хэл, уран зохиолын багш</option>
           <option value="phys">⚡ Физикийн багш</option>
@@ -383,7 +396,6 @@ input[type=radio]{width:auto;min-width:0;margin:0;accent-color:#6366f1}
           <option value="en">🇬🇧 Англи хэлний багш</option>
           <option value="cs">💻 Мэдээлэл зүйн багш</option>
           <option value="elem">🎒 Бага ангийн багш (1–4)</option>
-          <option value="all">📚 Бүх хичээл (Ерөнхий)</option>
         </select>
       </div>
       <label>Утасны дугаар</label>
@@ -879,29 +891,41 @@ function showView(id) {
     if (isTeacher) ge('land-teacher-name').textContent = '👩‍🏫 ' + sess.name + ' (' + sess.phone + ')';
   }
 }
-function goToAuth(role) {
-  authRole = role;
-  // update role tabs when auth view opens
+function switchLandMode(m) {
+  ['login','reg'].forEach(x => {
+    const t = ge('land-tab-' + x), b = ge('land-mode-' + x);
+    if (t) t.classList.toggle('active', x === m);
+    if (b) b.style.display = x === m ? '' : 'none';
+  });
+}
+
+function goToAuth(role, mode) {
+  authRole = role || 'student';
+  const targetMode = mode || 'login';
   showView('v-auth');
-  setTimeout(() => switchRole(role), 10);
+  setTimeout(() => {
+    switchRole(authRole, true);
+    switchTab(targetMode);
+  }, 10);
 }
 // Current auth role: 'teacher' | 'student'
 let authRole = 'teacher';
 
-function switchRole(r) {
+function switchRole(r, keepTab) {
   authRole = r;
   ['teacher','student'].forEach(x =>
     ge('role-tab-'+x).classList.toggle('active', x===r)
   );
   const labels = {
-    teacher: 'Багшийн эрхээр нэвтэрч байна',
-    student: 'Сурагчийн эрхээр нэвтэрч байна'
+    teacher: 'Багшийн эрхээр нэвтэрч / бүртгүүлж байна',
+    student: 'Сурагчийн эрхээр нэвтэрч / бүртгүүлж байна'
   };
   ge('auth-role-label').textContent = labels[r];
   const sw = ge('r-subj-wrap');
   if (sw) sw.style.display = r === 'teacher' ? '' : 'none';
-  // reset to login tab
-  switchTab('login');
+  const rn = ge('r-name');
+  if (rn) rn.placeholder = r === 'teacher' ? 'Жишээ: Дорж багш' : 'Жишээ: Болд';
+  if (!keepTab) switchTab('login');
 }
 
 function switchTab(t) {
@@ -960,6 +984,11 @@ function doPhoneRegister() {
   ge('auth-err').style.display = 'none';
 
   if (!name)               return showAuthErr('Нэрээ оруулна уу');
+  let subject = null;
+  if (authRole === 'teacher') {
+    subject = ge('r-subj') ? ge('r-subj').value : '';
+    if (!subject) return showAuthErr('Ямар хичээлийн багш болохоо заавал сонгоно уу!');
+  }
   if (!phone||phone.length<8) return showAuthErr('Утасны дугаараа зөв оруулна уу');
   if (pass.length < 6)    return showAuthErr('Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой');
 
@@ -971,7 +1000,6 @@ function doPhoneRegister() {
   }
 
   // Same phone allowed for different roles — stored under separate keys
-  const subject = authRole === 'teacher' ? (ge('r-subj')?.value || 'all') : null;
   users[key] = { name, phone, role: authRole, subject, passHash: hashPass(pass) };
   saveUsers(users);
 
